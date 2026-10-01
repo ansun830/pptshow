@@ -401,13 +401,23 @@ class SlideCastHandler(BaseHTTPRequestHandler):
                 room["totalPages"] = int(data["totalPages"])
             if "laser" in data:
                 room["laser"] = data["laser"]
+            if "spotlight" in data:
+                room["spotlight"] = data["spotlight"]
+            if "drawing" in data:
+                room["drawing"] = data["drawing"]
+            if "transition" in data:
+                room["transition"] = data["transition"]
             room["lastActive"] = time.time()
             save_rooms()
 
         broadcast_data = {
             "page": room["currentPage"],
             "totalPages": room.get("totalPages", 1),
-            "laser": room.get("laser", {"active": False, "x": 0, "y": 0})
+            "laser": room.get("laser", {"active": False, "x": 0, "y": 0}),
+            "spotlight": room.get("spotlight", {"active": False, "x": 0, "y": 0}),
+            "drawing": data.get("drawing", None),
+            "transition": room.get("transition", "fade"),
+            "direction": data.get("direction", "next")
         }
         broadcast_event(room_id, "sync", broadcast_data)
         self.send_json({"success": True, "state": broadcast_data})

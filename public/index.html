@@ -40,6 +40,21 @@
           <button type="button" id="removeFileBtn" class="btn-text">重新选择</button>
         </div>
 
+        <!-- 智能极速压缩选项与瘦身进度 -->
+        <div id="compressOptionBox" class="compress-option-box" style="display: none;">
+          <label class="compress-label">
+            <input type="checkbox" id="autoCompressCheck" checked>
+            <span class="compress-label-title">⚡ 开启智能高清压缩 (极速瘦身 70%~90%)</span>
+          </label>
+          <div class="compress-tip">将文稿内未压缩的数码大图优化为高清适合屏幕的尺寸，大幅加快观众加载速度，降低流量消耗。</div>
+          <div id="compressionStats" class="compression-stats" style="display: none;">
+            <div class="stat-pill">原大小: <strong id="origSizeText">--</strong></div>
+            <div class="stat-arrow">➔</div>
+            <div class="stat-pill stat-highlight">压缩后: <strong id="compSizeText">--</strong></div>
+            <div class="stat-badge-saved">已瘦身 <strong id="savedPercentText">--</strong></div>
+          </div>
+        </div>
+
         <div class="form-group">
           <label for="roomNameInput">演示主题 / 房间名称（可选）</label>
           <input type="text" id="roomNameInput" placeholder="例如：2026 Q3 季度业务规划汇报" class="input-text">
@@ -53,9 +68,14 @@
 
       <div class="features-grid">
         <div class="feature-item">
+          <div class="feature-icon">✨</div>
+          <div class="feature-title">影院级动效与交互</div>
+          <div class="feature-desc">支持淡入、推移、微弹等多种平滑转场，配备电影级聚光灯与荧光画笔。</div>
+        </div>
+        <div class="feature-item">
           <div class="feature-icon">⚡</div>
           <div class="feature-title">毫秒级同步翻页</div>
-          <div class="feature-desc">主讲人一键翻页或移动激光笔，所有观众端画面实时同步跟随。</div>
+          <div class="feature-desc">主讲人翻页、光标或涂鸦标注，所有观众端画面实时同步跟随。</div>
         </div>
         <div class="feature-item">
           <div class="feature-icon">🔄</div>
@@ -67,11 +87,6 @@
           <div class="feature-title">主讲 / 观众权限隔离</div>
           <div class="feature-desc">主讲人持有管理密钥控制演示；观众只读跟随，防止误触和翻页冲突。</div>
         </div>
-        <div class="feature-item">
-          <div class="feature-icon">🧹</div>
-          <div class="feature-title">磁盘空间自动优化</div>
-          <div class="feature-desc">演示完毕一键销毁文件，过期自动垃圾回收，极适合轻量小硬盘云服务器。</div>
-        </div>
       </div>
     </main>
   </div>
@@ -79,7 +94,7 @@
   <!-- 2. 演示界面 -->
   <div id="presentView" class="view-section" style="display: none;">
     <!-- 顶部导航栏 -->
-    <header class="present-header">
+    <header class="present-header" id="presentHeader">
       <div class="present-header-left">
         <a href="/" class="brand-link" title="返回首页">
           <span class="logo-icon">📊</span>
@@ -100,57 +115,102 @@
           <button id="prevSlideBtn" class="btn-icon" title="上一页 (←)">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
-          <div class="page-display">
+          <div class="page-display" id="pageDisplayBtn" title="点击查看所有幻灯片 (G)">
             <span id="currentPageNum">1</span> / <span id="totalPagesNum">1</span>
           </div>
           <button id="nextSlideBtn" class="btn-icon" title="下一页 (→ 或 空格)">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
           </button>
         </div>
+
+        <!-- 转场动效选择器 (主讲人控制) -->
+        <div id="transitionSelectorWrap" class="transition-selector-wrap">
+          <select id="transitionSelect" class="select-clean" title="选择幻灯片平滑转场动画">
+            <option value="fade">💫 平滑淡入</option>
+            <option value="slide">↔️ 水平推移</option>
+            <option value="zoom">🔍 景深缩放</option>
+            <option value="none">⚡ 极速切换</option>
+          </select>
+        </div>
       </div>
 
       <div class="present-header-right">
-        <!-- 主讲人专属工具 -->
+        <!-- 主讲人专属高级交互工具 -->
         <div id="presenterTools" class="tool-group">
+          <!-- 激光笔 -->
           <button id="laserBtn" class="btn-icon" title="激光笔 (L)">
             <span class="laser-dot-icon"></span>
           </button>
+          <!-- 电影级聚光灯 -->
+          <button id="spotlightBtn" class="btn-icon" title="电影级聚光灯聚焦 (S)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+          </button>
+          <!-- 荧光画笔标注 -->
+          <button id="penBtn" class="btn-icon" title="荧光画笔标注 (P)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+          </button>
+          <!-- 清除标注 -->
+          <button id="clearDrawBtn" class="btn-icon" title="清除屏幕上的所有标注" style="display: none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+          </button>
+          <!-- 幻灯片总览网格 -->
+          <button id="gridOverviewBtn" class="btn-icon" title="幻灯片卡片总览 (G)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+          </button>
+          <!-- 换稿 -->
           <button id="updateFileBtn" class="btn-action" title="换稿不换链：更新 PPT">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.19"/></svg>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.19"/></svg>
             <span>更新 PPT</span>
           </button>
+          <!-- 结束并清理 -->
           <button id="destroyRoomBtn" class="btn-action btn-danger-action" title="结束演示并立即删除文稿以释放服务器存储空间">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             <span>结束并清理</span>
           </button>
         </div>
 
         <!-- 观众端专属状态 -->
         <div id="audienceTools" class="tool-group" style="display: none;">
+          <button id="audienceGridBtn" class="btn-icon" title="查看所有幻灯片目录 (G)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+          </button>
           <button id="followToggleBtn" class="btn-action active" title="跟随主讲人模式切换">
             <span class="follow-icon">👁️</span>
             <span id="followStatusText">正在跟随主讲人</span>
           </button>
         </div>
 
-        <!-- 通用工具 -->
+        <!-- 通用快捷工具 -->
+        <button id="shortcutsBtn" class="btn-icon" title="快捷键操作指南 (?)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </button>
         <button id="shareBtn" class="btn-action btn-share" title="获取分享网址">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           <span>分享链接</span>
         </button>
-        <button id="fullscreenBtn" class="btn-icon" title="全屏演示 (F)">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+        <button id="fullscreenBtn" class="btn-icon" title="全屏沉浸演示 (F)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
         </button>
       </div>
     </header>
 
-    <!-- 幻灯片渲染主体容器 -->
+    <!-- 幻灯片渲染主体容器 (带流光背景氛围) -->
     <main class="slide-viewport" id="slideViewport">
+      <!-- 舞台背光流光辉光层 -->
+      <div id="ambientGlow" class="ambient-glow"></div>
+
       <div id="slideStage" class="slide-stage">
         <!-- Canvas 画布 (PDF 渲染) -->
         <canvas id="pdfCanvas" style="display: none;"></canvas>
         <!-- HTML 容器 (PPTX 渲染) -->
         <div id="pptxContainer" class="pptx-container" style="display: none;"></div>
+
+        <!-- 荧光画笔标注画布 -->
+        <canvas id="drawCanvas" class="draw-canvas"></canvas>
+
+        <!-- 聚光灯聚焦蒙版 -->
+        <div id="spotlightMask" class="spotlight-mask" style="display: none;"></div>
+
         <!-- 激光笔悬浮层 -->
         <div id="laserPointer" class="laser-pointer" style="display: none;"></div>
       </div>
@@ -176,7 +236,68 @@
     </div>
   </div>
 
-  <!-- 3. 模态框：分享链接 -->
+  <!-- 3. 模态框：幻灯片总览网格 (Grid Overview) -->
+  <div id="gridModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card modal-card-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">幻灯片目录总览</h3>
+        <button class="modal-close" id="closeGridModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="gridSlidesContainer" class="grid-slides-container">
+          <!-- 动态生成的幻灯片卡片 -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 模态框：快捷键指南 -->
+  <div id="shortcutsModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card modal-card-sm">
+      <div class="modal-header">
+        <h3 class="modal-title">⌨️ 演示快捷键指南</h3>
+        <button class="modal-close" id="closeShortcutsModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="shortcuts-list">
+          <div class="shortcut-row">
+            <span class="key-badge">→</span> / <span class="key-badge">Space</span>
+            <span class="shortcut-desc">下一页幻灯片</span>
+          </div>
+          <div class="shortcut-row">
+            <span class="key-badge">←</span>
+            <span class="shortcut-desc">上一页幻灯片</span>
+          </div>
+          <div class="shortcut-row">
+            <span class="key-badge">L</span>
+            <span class="shortcut-desc">切换激光笔</span>
+          </div>
+          <div class="shortcut-row">
+            <span class="key-badge">S</span>
+            <span class="shortcut-desc">开启/关闭 聚光灯聚焦模式</span>
+          </div>
+          <div class="shortcut-row">
+            <span class="key-badge">P</span>
+            <span class="shortcut-desc">开启/关闭 荧光画笔标注</span>
+          </div>
+          <div class="shortcut-row">
+            <span class="key-badge">G</span>
+            <span class="shortcut-desc">打开/关闭 幻灯片总览画廊</span>
+          </div>
+          <div class="shortcut-row">
+            <span class="key-badge">F</span>
+            <span class="shortcut-desc">切换沉浸式全屏</span>
+          </div>
+          <div class="shortcut-row">
+            <span class="key-badge">Esc</span>
+            <span class="shortcut-desc">退出全屏 / 关闭弹窗工具</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 模态框：分享链接 -->
   <div id="shareModal" class="modal-overlay" style="display: none;">
     <div class="modal-card">
       <div class="modal-header">
@@ -205,7 +326,7 @@
     </div>
   </div>
 
-  <!-- 4. 模态框：换稿不换链（重新上传 PPT） -->
+  <!-- 6. 模态框：换稿不换链（重新上传 PPT） -->
   <div id="updateModal" class="modal-overlay" style="display: none;">
     <div class="modal-card">
       <div class="modal-header">
@@ -226,6 +347,13 @@
         <div id="updateFileInfo" class="selected-file-info" style="display: none; margin-top: 12px;">
           <span class="file-icon">📄</span>
           <span id="updateFileName" class="file-name">新版文件</span>
+        </div>
+
+        <div id="updateCompressBox" class="compress-option-box" style="display: none; margin-top: 10px;">
+          <label class="compress-label">
+            <input type="checkbox" id="updateAutoCompressCheck" checked>
+            <span class="compress-label-title">⚡ 自动启用智能瘦身压缩 (推荐)</span>
+          </label>
         </div>
 
         <div class="modal-actions">

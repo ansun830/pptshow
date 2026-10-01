@@ -276,10 +276,13 @@ app.post("/api/room/:id/sync", (req, res) => {
     return res.status(403).json({ error: "未授权" });
   }
 
-  const { page, totalPages, laser } = req.body;
+  const { page, totalPages, laser, spotlight, drawing, transition, direction } = req.body;
   if (page !== undefined) room.currentPage = parseInt(page);
   if (totalPages !== undefined) room.totalPages = parseInt(totalPages);
   if (laser !== undefined) room.laser = laser;
+  if (spotlight !== undefined) room.spotlight = spotlight;
+  if (drawing !== undefined) room.drawing = drawing;
+  if (transition !== undefined) room.transition = transition;
   room.lastActive = Date.now();
   saveRooms();
 
@@ -287,6 +290,10 @@ app.post("/api/room/:id/sync", (req, res) => {
     page: room.currentPage,
     totalPages: room.totalPages,
     laser: room.laser,
+    spotlight: room.spotlight,
+    drawing: room.drawing,
+    transition: room.transition,
+    direction: direction || "next",
   };
   broadcastEvent(roomId, "sync", syncData);
 

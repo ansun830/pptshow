@@ -14,7 +14,7 @@ const server = http.createServer(app);
 
 const PORT = process.env.PORT || 8080;
 const CLEANUP_HOURS = parseInt(process.env.CLEANUP_HOURS || "24", 10);
-const MAX_UPLOAD_MB = parseInt(process.env.MAX_UPLOAD_MB || "50", 10);
+const MAX_UPLOAD_MB = parseInt(process.env.MAX_UPLOAD_MB || "200", 10);
 
 const UPLOAD_DIR = path.join(__dirname, "uploads");
 const PUBLIC_DIR = path.join(__dirname, "public");

@@ -615,8 +615,8 @@ function handleFileSelected(file) {
     showToast("请上传 .pptx 或 .pdf 格式文件", "warning");
     return;
   }
-  if (file.size > 50 * 1024 * 1024) {
-    showToast("文件体积超过 50MB 上限，已拦截以保护服务器存储空间", "warning");
+  if (file.size > 200 * 1024 * 1024) {
+    showToast("文件体积超过 200MB 上限，已拦截以保护服务器存储空间", "warning");
     return;
   }
 

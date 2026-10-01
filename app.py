@@ -5,7 +5,7 @@ SlideCast - PPT/PDF 实时同步演示 Web 服务 (Python 零依赖独立运行�
 1. 换稿自动删除历史版本，绝不堆叠垃圾文稿。
 2. 内置后台自动回收机制 (默认 24 小时自动清理过期文稿，释放磁盘)。
 3. 主讲人一键销毁房间，演示结束后立即释放服务器磁盘空间。
-4. 严格单文件体积上限拦截 (默认 50MB)，防止把服务器撑爆。
+4. 严格单文件体积上限拦截 (默认 200MB)，防止把服务器撑爆。
 """
 
 import os
@@ -26,7 +26,7 @@ DATA_FILE = os.path.join(BASE_DIR, "rooms_data.json")
 
 # 存储优化参数配置
 CLEANUP_HOURS = int(os.environ.get("CLEANUP_HOURS", 24))  # 超过 24 小时未活动的房间自动销毁
-MAX_UPLOAD_MB = int(os.environ.get("MAX_UPLOAD_MB", 50))  # 单个文件体积上限 (MB)
+MAX_UPLOAD_MB = int(os.environ.get("MAX_UPLOAD_MB", 200))  # 单个文件体积上限 (MB)
 
 os.makedirs(PUBLIC_DIR, exist_ok=True)
 os.makedirs(UPLOAD_DIR, exist_ok=True)

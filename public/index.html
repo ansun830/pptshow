@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SlideCast - 实时演示与即时更新协同平台</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- PDF.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- JSZip CDN 用于解析 PPTX 内部文件与提取幻灯片 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body class="theme-dark">
+
+  <!-- 1. 首页：上传与创建房间 -->
+  <div id="homeView" class="view-section">
+    <header class="home-header">
+      <div class="logo">
+        <span class="logo-icon">📊</span>
+        <span class="logo-text">SlideCast</span>
+      </div>
+      <div class="header-tagline">专为即时演示设计的轻量网页协同平台（云存储自动优化保护）</div>
+    </header>
+
+    <main class="home-main">
+      <div class="card upload-card">
+        <h2 class="card-title">上传 PPT 或 PDF，即刻开始演示</h2>
+        <p class="card-desc">上传后即可获得固定分享网址；演示时翻页毫秒级同步，支持随时换稿热更新！</p>
+
+        <div id="dropZone" class="drop-zone">
+          <input type="file" id="fileInput" accept=".pptx, .pdf" style="display: none;">
+          <div class="drop-icon">📁</div>
+          <div class="drop-text">拖拽 PPTX / PDF 文件到此处，或 <span class="highlight-link">点击选择文件</span></div>
+          <div class="drop-hint">支持 .pptx 和 .pdf 格式，单文件上限 50MB (自动防撑爆保护)</div>
+        </div>
+
+        <div id="selectedFileInfo" class="selected-file-info" style="display: none;">
+          <span class="file-icon">📄</span>
+          <span id="selectedFileName" class="file-name">未选择文件</span>
+          <button type="button" id="removeFileBtn" class="btn-text">重新选择</button>
+        </div>
+
+        <div class="form-group">
+          <label for="roomNameInput">演示主题 / 房间名称（可选）</label>
+          <input type="text" id="roomNameInput" placeholder="例如：2026 Q3 季度业务规划汇报" class="input-text">
+        </div>
+
+        <button id="startPresentBtn" class="btn btn-primary btn-block" disabled>
+          <span class="btn-text">创建演示并获取网址</span>
+          <span id="uploadSpinner" class="spinner" style="display: none;"></span>
+        </button>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-item">
+          <div class="feature-icon">⚡</div>
+          <div class="feature-title">毫秒级同步翻页</div>
+          <div class="feature-desc">主讲人一键翻页或移动激光笔，所有观众端画面实时同步跟随。</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🔄</div>
+          <div class="feature-title">换稿不换链</div>
+          <div class="feature-desc">重新上传新版自动删除老文件，观众端零感刷新，绝不产生双份存储占用。</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🛡️</div>
+          <div class="feature-title">主讲 / 观众权限隔离</div>
+          <div class="feature-desc">主讲人持有管理密钥控制演示；观众只读跟随，防止误触和翻页冲突。</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🧹</div>
+          <div class="feature-title">磁盘空间自动优化</div>
+          <div class="feature-desc">演示完毕一键销毁文件，过期自动垃圾回收，极适合轻量小硬盘云服务器。</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 2. 演示界面 -->
+  <div id="presentView" class="view-section" style="display: none;">
+    <!-- 顶部导航栏 -->
+    <header class="present-header">
+      <div class="present-header-left">
+        <a href="/" class="brand-link" title="返回首页">
+          <span class="logo-icon">📊</span>
+          <span class="brand-name">SlideCast</span>
+        </a>
+        <div class="room-info">
+          <span id="displayRoomName" class="room-title">演示文稿</span>
+          <span id="roleBadge" class="badge badge-host">主讲人</span>
+          <span id="connStatus" class="conn-status online" title="已连接实时服务">
+            <span class="dot"></span> 实时同步中
+          </span>
+        </div>
+      </div>
+
+      <div class="present-header-center">
+        <!-- 翻页控制 -->
+        <div class="pagination-controls">
+          <button id="prevSlideBtn" class="btn-icon" title="上一页 (←)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div class="page-display">
+            <span id="currentPageNum">1</span> / <span id="totalPagesNum">1</span>
+          </div>
+          <button id="nextSlideBtn" class="btn-icon" title="下一页 (→ 或 空格)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="present-header-right">
+        <!-- 主讲人专属工具 -->
+        <div id="presenterTools" class="tool-group">
+          <button id="laserBtn" class="btn-icon" title="激光笔 (L)">
+            <span class="laser-dot-icon"></span>
+          </button>
+          <button id="updateFileBtn" class="btn-action" title="换稿不换链：更新 PPT">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.19"/></svg>
+            <span>更新 PPT</span>
+          </button>
+          <button id="destroyRoomBtn" class="btn-action btn-danger-action" title="结束演示并立即删除文稿以释放服务器存储空间">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <span>结束并清理</span>
+          </button>
+        </div>
+
+        <!-- 观众端专属状态 -->
+        <div id="audienceTools" class="tool-group" style="display: none;">
+          <button id="followToggleBtn" class="btn-action active" title="跟随主讲人模式切换">
+            <span class="follow-icon">👁️</span>
+            <span id="followStatusText">正在跟随主讲人</span>
+          </button>
+        </div>
+
+        <!-- 通用工具 -->
+        <button id="shareBtn" class="btn-action btn-share" title="获取分享网址">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          <span>分享链接</span>
+        </button>
+        <button id="fullscreenBtn" class="btn-icon" title="全屏演示 (F)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- 幻灯片渲染主体容器 -->
+    <main class="slide-viewport" id="slideViewport">
+      <div id="slideStage" class="slide-stage">
+        <!-- Canvas 画布 (PDF 渲染) -->
+        <canvas id="pdfCanvas" style="display: none;"></canvas>
+        <!-- HTML 容器 (PPTX 渲染) -->
+        <div id="pptxContainer" class="pptx-container" style="display: none;"></div>
+        <!-- 激光笔悬浮层 -->
+        <div id="laserPointer" class="laser-pointer" style="display: none;"></div>
+      </div>
+
+      <!-- 加载遮罩 -->
+      <div id="slideLoadingMask" class="loading-mask" style="display: flex;">
+        <div class="loader-spinner"></div>
+        <div id="loadingText" class="loading-text">正在加载演示文稿...</div>
+      </div>
+
+      <!-- 观众临时自由翻页提示悬浮条 -->
+      <div id="audienceSyncNotice" class="sync-notice" style="display: none;">
+        <span>主讲人当前在第 <strong id="hostCurrentPageTag">1</strong> 页</span>
+        <button id="catchUpBtn" class="btn btn-sm btn-accent">回到主讲人画面</button>
+      </div>
+    </main>
+
+    <!-- 底部缩略图/快捷进度条 -->
+    <div class="slide-footer">
+      <div id="slideProgressBar" class="slide-progress-bar">
+        <div id="slideProgressFill" class="progress-fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 模态框：分享链接 -->
+  <div id="shareModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">分享本次演示</h3>
+        <button class="modal-close" id="closeShareModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="share-field">
+          <label>观众分享网址（发给参会人员，只读且自动同步）：</label>
+          <div class="copy-input-group">
+            <input type="text" id="audienceShareUrl" readonly class="input-text">
+            <button id="copyAudienceUrlBtn" class="btn btn-primary">复制网址</button>
+          </div>
+          <div class="tip-text">任何人打开此网址均可直接观看，随着主讲人翻页实时同步。</div>
+        </div>
+
+        <div id="hostLinkSection" class="share-field host-only-field">
+          <label>主讲人管理网址（带控制私钥，请妥善保存自己使用）：</label>
+          <div class="copy-input-group">
+            <input type="text" id="hostShareUrl" readonly class="input-text">
+            <button id="copyHostUrlBtn" class="btn btn-secondary">复制管理链</button>
+          </div>
+          <div class="tip-text text-warning">拥有该链接可控制翻页、激光笔及重新换稿，请勿发送给普通观众。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 模态框：换稿不换链（重新上传 PPT） -->
+  <div id="updateModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">换稿不换链：更新 PPT / PDF</h3>
+        <button class="modal-close" id="closeUpdateModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">
+          上传修改后的最新文稿后，<strong>当前的演示网址保持不变</strong>。老旧版本会自动从服务器删除以节省空间，所有正在观看的观众页面将无缝热重载至最新内容！
+        </p>
+
+        <div id="updateDropZone" class="drop-zone drop-zone-sm">
+          <input type="file" id="updateFileInput" accept=".pptx, .pdf" style="display: none;">
+          <div class="drop-icon">📤</div>
+          <div class="drop-text">点击选择新版 PPTX 或 PDF 文件</div>
+        </div>
+
+        <div id="updateFileInfo" class="selected-file-info" style="display: none; margin-top: 12px;">
+          <span class="file-icon">📄</span>
+          <span id="updateFileName" class="file-name">新版文件</span>
+        </div>
+
+        <div class="modal-actions">
+          <button id="confirmUpdateBtn" class="btn btn-primary btn-block" disabled style="margin-top: 16px;">
+            <span class="btn-text">立即替换并推送到所有观众端</span>
+            <span id="updateSpinner" class="spinner" style="display: none;"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 全局 Toast 提示容器 -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

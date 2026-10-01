@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  slide-cast:
+    build: .
+    container_name: slide-cast-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./rooms_data.json:/app/rooms_data.json
+    environment:
+      - PORT=8080

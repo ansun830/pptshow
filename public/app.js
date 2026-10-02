@@ -749,34 +749,33 @@ async function renderPdfPage(pageNum, direction = "next") {
       scale = fitPageScale * (state.zoomLevel || 1.0);
     }
 
-    const viewport = page.getViewport({ scale, rotation: currentRotation });
-    const outputScale = window.devicePixelRatio || 1;
+        const outputScale = window.devicePixelRatio || 1;
+    // 高清视口：以 scale * outputScale 渲染，直接得出高分物理像素尺寸
+    const scaledViewport = page.getViewport({ scale: scale * outputScale, rotation: currentRotation });
+    // CSS 视口：以 scale 计算在浏览器视口中的排版尺寸
+    const cssViewport = page.getViewport({ scale: scale, rotation: currentRotation });
 
-    const targetW = Math.floor(viewport.width * outputScale);
-    const targetH = Math.floor(viewport.height * outputScale);
+    const targetW = Math.floor(scaledViewport.width);
+    const targetH = Math.floor(scaledViewport.height);
 
-    // 采用离屏双缓冲渲染 (Offscreen Buffer)：在后台完成 PDF 栅格化后瞬时上屏，杜绝先清空白屏导致的频闪
+    // 采用离屏双缓冲渲染 (Offscreen Buffer)：直接使用 scaledViewport 绘制，免去 transform 矩阵二次乘积导致的 200% 裁剪显示不全 Bug
     const offCanvas = document.createElement("canvas");
     offCanvas.width = targetW;
     offCanvas.height = targetH;
     const offCtx = offCanvas.getContext("2d");
-    if (outputScale !== 1) {
-      offCtx.setTransform(outputScale, 0, 0, outputScale, 0, 0);
-    }
 
     const renderContext = {
       canvasContext: offCtx,
-      transform: outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null,
-      viewport: viewport,
+      viewport: scaledViewport,
     };
 
     await page.render(renderContext).promise;
 
-    // 绘制完成后瞬时置换，保持画面无缝衔接
+    // 绘制完成后瞬时置换上屏，1:1 精确映射，无裁剪无白闪，整张图纸 100% 完整可见
     canvas.width = targetW;
     canvas.height = targetH;
-    canvas.style.width = Math.floor(viewport.width) + "px";
-    canvas.style.height = Math.floor(viewport.height) + "px";
+    canvas.style.width = Math.floor(cssViewport.width) + "px";
+    canvas.style.height = Math.floor(cssViewport.height) + "px";
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.drawImage(offCanvas, 0, 0);
 

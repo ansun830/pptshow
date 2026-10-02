@@ -154,6 +154,8 @@ const dom = {
   motionMenuBtn: document.getElementById("motionMenuBtn"),
   motionMenuPopup: document.getElementById("motionMenuPopup"),
   transitionSelect: document.getElementById("transitionSelect"),
+  toggleMotionQuickBtn: document.getElementById("toggleMotionQuickBtn"),
+  motionQuickStatus: document.getElementById("motionQuickStatus"),
   kenBurnsToggleBtn: document.getElementById("kenBurnsToggleBtn"),
   kenBurnsStatus: document.getElementById("kenBurnsStatus"),
   walkthroughVideoBtn: document.getElementById("walkthroughVideoBtn"),
@@ -588,7 +590,7 @@ function handleSyncState(data) {
   // 转场动效同步
   if (data.transition) {
     state.transitionEffect = data.transition;
-    if (dom.transitionSelect) dom.transitionSelect.value = data.transition;
+    updateMotionUI();
   }
 
   // 漫游视频播放同步
@@ -606,15 +608,22 @@ function handleSyncState(data) {
     }
   }
 
-  // 翻页同步
+  // 翻页同步 (带防重防频闪保护)
   if (data.page !== undefined) {
     const prevPage = state.currentPage;
     state.hostCurrentPage = data.page;
     dom.hostCurrentPageTag.textContent = data.page;
     const direction = data.direction || (data.page >= prevPage ? "next" : "prev");
 
-    if (state.isPresenter || state.isFollowingHost) {
-      goToSlide(data.page, false, direction);
+    // 核心修复：主讲人本地已即时响应翻页，彻底忽略来自服务端的广播回环，杜绝“执行两下、闪烁两下”
+    if (state.isPresenter) {
+      return;
+    }
+
+    if (state.isFollowingHost) {
+      if (state.currentPage !== data.page) {
+        goToSlide(data.page, false, direction);
+      }
       dom.audienceSyncNotice.style.display = "none";
     } else {
       if (state.currentPage !== state.hostCurrentPage) {
@@ -721,20 +730,34 @@ async function renderPdfPage(pageNum, direction = "next") {
     const viewport = page.getViewport({ scale, rotation: currentRotation });
     const outputScale = window.devicePixelRatio || 1;
 
-    canvas.width = Math.floor(viewport.width * outputScale);
-    canvas.height = Math.floor(viewport.height * outputScale);
-    canvas.style.width = Math.floor(viewport.width) + "px";
-    canvas.style.height = Math.floor(viewport.height) + "px";
+    const targetW = Math.floor(viewport.width * outputScale);
+    const targetH = Math.floor(viewport.height * outputScale);
 
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    // 采用离屏双缓冲渲染 (Offscreen Buffer)：在后台完成 PDF 栅格化后瞬时上屏，杜绝先清空白屏导致的频闪
+    const offCanvas = document.createElement("canvas");
+    offCanvas.width = targetW;
+    offCanvas.height = targetH;
+    const offCtx = offCanvas.getContext("2d");
+    if (outputScale !== 1) {
+      offCtx.setTransform(outputScale, 0, 0, outputScale, 0, 0);
+    }
 
     const renderContext = {
-      canvasContext: ctx,
+      canvasContext: offCtx,
       transform: outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null,
       viewport: viewport,
     };
 
     await page.render(renderContext).promise;
+
+    // 绘制完成后瞬时置换，保持画面无缝衔接
+    canvas.width = targetW;
+    canvas.height = targetH;
+    canvas.style.width = Math.floor(viewport.width) + "px";
+    canvas.style.height = Math.floor(viewport.height) + "px";
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(offCanvas, 0, 0);
+
     syncDrawCanvasSize(canvas.style.width, canvas.style.height);
     applySlideTransition(canvas, direction);
   } catch (err) {
@@ -838,28 +861,41 @@ function syncDrawCanvasSize(widthStr, heightStr) {
 // 8. 动效引擎 (转场、建筑漫游巡镜、自动巡展)
 // ============================================================
 function applySlideTransition(el, direction = "next") {
+  // 对标苹果系统“减弱动态效果”逻辑：选择关闭动效时，0毫秒极速直切，无位移无渐变
   if (state.transitionEffect === "none" || direction === "none") {
     el.className = el.id === "pdfCanvas" ? "" : "pptx-container";
+    el.style.animation = "none";
+    el.style.transition = "none";
+    el.style.opacity = "1";
+    el.style.transform = "none";
     return;
   }
 
+  el.style.animation = "";
+  el.style.transition = "";
   el.classList.remove("anim-fade", "anim-slide-next", "anim-slide-prev", "anim-zoom");
-  void el.offsetWidth;
+  void el.offsetWidth; // 触发单次回流
 
   if (state.transitionEffect === "slide") {
     el.classList.add(direction === "prev" ? "anim-slide-prev" : "anim-slide-next");
   } else if (state.transitionEffect === "zoom") {
     el.classList.add("anim-zoom");
   } else {
+    // 默认苹果经典平滑淡入 (Apple Keynote Dissolve)
     el.classList.add("anim-fade");
   }
 }
 
-function goToSlide(pageNum, triggerBroadcast = true, direction = "next") {
+function goToSlide(pageNum, triggerBroadcast = true, direction = "next", force = false) {
   const target = Math.max(1, Math.min(pageNum, state.totalPages));
   const oldPage = state.currentPage;
-  state.currentPage = target;
 
+  // 防二次重绘：如果已经在当前页且非强制刷新，避免重复触发动画闪烁
+  if (!force && target === oldPage && state.pdfDoc && dom.pdfCanvas.style.display === "block" && dom.pdfCanvas.width > 0) {
+    return;
+  }
+
+  state.currentPage = target;
   const actualDir = direction !== "none" ? (target >= oldPage ? "next" : "prev") : "none";
 
   updatePaginationUI();
@@ -886,6 +922,33 @@ function updatePaginationUI() {
   dom.totalPagesNum.textContent = state.totalPages;
   dom.prevSlideBtn.disabled = state.currentPage <= 1;
   dom.nextSlideBtn.disabled = state.currentPage >= state.totalPages;
+}
+
+
+function updateMotionUI() {
+  const isNone = state.transitionEffect === "none";
+  if (dom.motionQuickStatus) {
+    dom.motionQuickStatus.textContent = isNone ? "已关闭 (极速直切)" : "已开启";
+    dom.motionQuickStatus.className = `status-tag ${isNone ? "" : "active"}`;
+  }
+  if (dom.transitionSelect) {
+    dom.transitionSelect.value = state.transitionEffect;
+  }
+}
+
+function toggleQuickMotion() {
+  if (state.transitionEffect === "none") {
+    state.transitionEffect = "fade";
+    showToast("🍎 已开启苹果平滑淡入动效 (Apple Keynote 级)", "info");
+  } else {
+    state.transitionEffect = "none";
+    showToast("⚡ 已关闭转场动效 (对标苹果减弱动态效果 / 0延迟秒切)", "info");
+  }
+  localStorage.setItem("slidecast_transition", state.transitionEffect);
+  updateMotionUI();
+  if (state.isPresenter) {
+    broadcastSync(true);
+  }
 }
 
 function toggleKenBurns() {
@@ -1178,6 +1241,12 @@ function setupTouchGestures() {
 // 13. 事件监听全量绑定
 // ============================================================
 function setupEventListeners() {
+  // 读取本地持久化转场偏好设置
+  const savedTrans = localStorage.getItem("slidecast_transition");
+  if (savedTrans) {
+    state.transitionEffect = savedTrans;
+    updateMotionUI();
+  }
   // 首页文件选择与拖拽
   dom.dropZone.addEventListener("click", () => dom.fileInput.click());
   dom.fileInput.addEventListener("change", (e) => {
@@ -1308,9 +1377,16 @@ function setupEventListeners() {
 
   dom.transitionSelect.addEventListener("change", (e) => {
     state.transitionEffect = e.target.value;
-    broadcastSync(true);
-    showToast(`转场动效已切换为: ${e.target.options[e.target.selectedIndex].text}`, "info");
+    localStorage.setItem("slidecast_transition", state.transitionEffect);
+    updateMotionUI();
+    if (state.isPresenter) broadcastSync(true);
+    const label = e.target.options[e.target.selectedIndex].text;
+    showToast(`转场风格已设置为: ${label}`, "info");
   });
+
+  if (dom.toggleMotionQuickBtn) {
+    dom.toggleMotionQuickBtn.addEventListener("click", toggleQuickMotion);
+  }
 
   dom.kenBurnsToggleBtn.addEventListener("click", toggleKenBurns);
   dom.autoPlayToggleBtn.addEventListener("click", toggleAutoPlay);

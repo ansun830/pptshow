@@ -27,7 +27,7 @@
     <!-- 顶部集团官方品牌横幅 -->
     <header class="home-brand-header">
       <div class="brand-logo-wrap">
-        <img src="/assets/jzfz-logo.svg" alt="基准方中" class="jzfz-logo-img">
+        <span class="jzfz-brand-title">基准方中</span>
       </div>
       <div class="brand-divider-line"></div>
       <div class="brand-platform-title">
@@ -173,9 +173,6 @@
 
     <!-- 顶部左上角：极简悬浮品牌徽标 (Corporate Identity Badge) -->
     <div id="brandFloatingBadge" class="floating-badge-top-left">
-      <div class="badge-logo-mark">
-        <img src="/assets/jzfz-mark.svg" alt="基准方中" class="jzfz-mini-mark">
-      </div>
       <div class="badge-text-group">
         <span class="badge-brand-title">基准方中</span>
         <span class="badge-sep">/</span>
@@ -343,13 +340,22 @@
             <div class="popup-title">电影级放映与动画控制</div>
 
             <div class="popup-item">
-              <label for="transitionSelect">页面切换转场</label>
+              <label for="transitionSelect">页面切换动效 (对标苹果系统逻辑)</label>
               <select id="transitionSelect" class="select-clean-arch">
-                <option value="fade">💫 平滑淡入 (Cross-Dissolve)</option>
-                <option value="slide">↔️ 建筑水平平移 (Slide)</option>
-                <option value="zoom">🔍 空间景深缩放 (Depth Zoom)</option>
-                <option value="none">⚡ 极速切换 (Instant)</option>
+                <option value="fade" selected>🍎 苹果经典平滑淡入 (Apple Keynote Dissolve · 丝滑无闪烁)</option>
+                <option value="slide">📱 苹果原生推移 (iOS Navigation Slide · 物理阻尼)</option>
+                <option value="zoom">🔍 苹果微景深透视 (Apple Depth Zoom)</option>
+                <option value="none">🚫 关闭动效 · 极速直切 (对标苹果减弱动态效果 / 0延迟秒切)</option>
               </select>
+            </div>
+
+            <div class="popup-item">
+              <button id="toggleMotionQuickBtn" class="btn-popup-action">
+                <span class="action-icon">⚡</span>
+                <span class="action-text">一键开启/关闭动效 (减弱动态效果)</span>
+                <span id="motionQuickStatus" class="status-tag active">动效开启</span>
+              </button>
+              <div class="popup-tip">对标 iOS“减弱动态效果”：关闭后为极速直切，0 延迟无任何动画；开启后为苹果级平滑物理淡入。</div>
             </div>
 
             <div class="popup-item">
@@ -630,7 +636,7 @@
   <div id="securityLockView" class="security-lock-overlay" style="display: none;">
     <div class="lock-card">
       <div class="lock-brand">
-        <img src="/assets/jzfz-logo.svg" alt="基准方中" class="lock-logo-img">
+        <span class="jzfz-brand-title">基准方中</span>
       </div>
       <div class="lock-divider"></div>
       <div class="lock-icon-badge">

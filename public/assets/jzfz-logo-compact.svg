@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 100" width="100%" height="100%">
+  <defs>
+    <style>
+      .brand-title-compact {
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Heiti SC", "Microsoft YaHei", sans-serif;
+        font-weight: 900;
+        font-size: 48px;
+        letter-spacing: 3px;
+        fill: #111111;
+      }
+      .stamp-outer-c {
+        fill: none;
+        stroke: #E60026;
+        stroke-width: 8;
+        stroke-linejoin: round;
+        stroke-linecap: round;
+      }
+      .stamp-stroke-c {
+        fill: none;
+        stroke: #E60026;
+        stroke-width: 7;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+    </style>
+  </defs>
+  <g transform="translate(10, 10)">
+    <rect class="stamp-outer-c" x="4" y="4" width="72" height="72" rx="12" ry="12" />
+    <line class="stamp-stroke-c" x1="18" y1="20" x2="62" y2="20" />
+    <line class="stamp-stroke-c" x1="28" y1="20" x2="28" y2="40" />
+    <line class="stamp-stroke-c" x1="52" y1="20" x2="52" y2="40" />
+    <line class="stamp-stroke-c" x1="28" y1="30" x2="52" y2="30" />
+    <line class="stamp-stroke-c" x1="19" y1="40" x2="61" y2="40" />
+    <path class="stamp-stroke-c" d="M 28 40 C 26 48, 22 55, 17 57" />
+    <path class="stamp-stroke-c" d="M 52 40 C 54 48, 58 55, 63 57" />
+    <line class="stamp-stroke-c" x1="40" y1="40" x2="40" y2="62" />
+    <line class="stamp-stroke-c" x1="26" y1="62" x2="54" y2="62" />
+  </g>
+  <text class="brand-title-compact" x="110" y="66">基准方中</text>
+</svg>

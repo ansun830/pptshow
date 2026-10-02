@@ -227,6 +227,36 @@ class SlideCastHandler(BaseHTTPRequestHandler):
         presenter_key = query.get("key", [None])[0] or self.headers.get("X-Presenter-Key")
         is_presenter = bool(presenter_key and presenter_key == room.get("secretKey"))
 
+        # 安全防盗与受控保护校验 (针对普通客户/观众)
+        sec = room.get("security", {})
+        if not is_presenter and sec.get("enabled", False):
+            now = time.time() * 1000
+            # 1. 检查时效是否过期
+            if sec.get("expiresAt") and now > sec["expiresAt"]:
+                self.send_json({
+                    "locked": True,
+                    "reason": "expired",
+                    "expiresAt": sec["expiresAt"],
+                    "message": "本建筑方案的受控查阅权限已到期。为保护知识产权，该链接已安全锁定，如需继续审阅请联系基准方中主讲团队获取授权。"
+                })
+                return
+            # 2. 检查最大阅览次数限制
+            max_v = sec.get("maxViews", 0)
+            cur_v = sec.get("currentViews", 0)
+            if max_v > 0 and cur_v >= max_v:
+                self.send_json({
+                    "locked": True,
+                    "reason": "max_views_reached",
+                    "maxViews": max_v,
+                    "currentViews": cur_v,
+                    "message": f"本方案已达最大允许阅览次数 ({max_v}/{max_v}次)。为保护设计方案知识产权，该链接已安全锁定。如需继续审阅，请联系基准方中设计团队。"
+                })
+                return
+
+            with rooms_lock:
+                sec["currentViews"] = cur_v + 1
+                save_rooms()
+
         with rooms_lock:
             room["lastActive"] = time.time()
             save_rooms()
@@ -241,6 +271,7 @@ class SlideCastHandler(BaseHTTPRequestHandler):
             "currentPage": room.get("currentPage", 1),
             "totalPages": room.get("totalPages", 1),
             "laser": room.get("laser", {"active": False, "x": 0, "y": 0}),
+            "security": room.get("security", {"enabled": False, "maxViews": 0, "currentViews": 0, "expiresAt": 0, "watermark": False}),
             "isPresenter": is_presenter
         }
         self.send_json(data)
@@ -319,6 +350,18 @@ class SlideCastHandler(BaseHTTPRequestHandler):
             parts = path.strip("/").split("/")
             room_id = parts[2]
             self.handle_sync(room_id)
+            return
+
+        if path.startswith("/api/room/") and path.endswith("/security"):
+            parts = path.strip("/").split("/")
+            room_id = parts[2]
+            self.handle_security(room_id)
+            return
+
+        if path.startswith("/api/room/") and path.endswith("/annotate"):
+            parts = path.strip("/").split("/")
+            room_id = parts[2]
+            self.handle_annotate(room_id)
             return
 
         if path.startswith("/api/room/") and path.endswith("/delete"):
@@ -407,6 +450,12 @@ class SlideCastHandler(BaseHTTPRequestHandler):
                 room["drawing"] = data["drawing"]
             if "transition" in data:
                 room["transition"] = data["transition"]
+            if "rotation" in data:
+                room["rotation"] = data["rotation"]
+            if "kenBurns" in data:
+                room["kenBurns"] = data["kenBurns"]
+            if "video" in data:
+                room["video"] = data["video"]
             room["lastActive"] = time.time()
             save_rooms()
 
@@ -417,10 +466,84 @@ class SlideCastHandler(BaseHTTPRequestHandler):
             "spotlight": room.get("spotlight", {"active": False, "x": 0, "y": 0}),
             "drawing": data.get("drawing", None),
             "transition": room.get("transition", "fade"),
-            "direction": data.get("direction", "next")
+            "direction": data.get("direction", "next"),
+            "rotation": room.get("rotation", 0),
+            "kenBurns": room.get("kenBurns", False),
+            "video": data.get("video", None)
         }
         broadcast_event(room_id, "sync", broadcast_data)
         self.send_json({"success": True, "state": broadcast_data})
+
+    def handle_security(self, room_id):
+        with rooms_lock:
+            room = rooms.get(room_id)
+
+        if not room:
+            self.send_json({"error": "Room not found"}, 404)
+            return
+
+        key = self.headers.get("X-Presenter-Key")
+        content_length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(content_length).decode("utf-8")
+        try:
+            data = json.loads(body)
+        except Exception:
+            self.send_json({"error": "Invalid JSON"}, 400)
+            return
+
+        if key != room.get("secretKey") and data.get("secretKey") != room.get("secretKey"):
+            self.send_json({"error": "Unauthorized: Presenter key mismatch"}, 403)
+            return
+
+        sec = room.setdefault("security", {"enabled": False, "maxViews": 0, "currentViews": 0, "expiresAt": 0, "watermark": False})
+        if "enabled" in data:
+            sec["enabled"] = bool(data["enabled"])
+        if "maxViews" in data:
+            sec["maxViews"] = int(data["maxViews"])
+        if "expiresHours" in data:
+            h = float(data["expiresHours"])
+            sec["expiresAt"] = (time.time() + h * 3600) * 1000 if h > 0 else 0
+        if "watermark" in data:
+            sec["watermark"] = bool(data["watermark"])
+
+        with rooms_lock:
+            room["lastActive"] = time.time()
+            save_rooms()
+
+        broadcast_event(room_id, "security_updated", sec)
+        self.send_json({"success": True, "security": sec})
+
+    def handle_annotate(self, room_id):
+        with rooms_lock:
+            room = rooms.get(room_id)
+
+        if not room:
+            self.send_json({"error": "Room not found"}, 404)
+            return
+
+        content_length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(content_length).decode("utf-8")
+        try:
+            data = json.loads(body)
+        except Exception:
+            self.send_json({"error": "Invalid JSON"}, 400)
+            return
+
+        drawing = data.get("drawing")
+        if not drawing:
+            self.send_json({"error": "Missing drawing data"}, 400)
+            return
+
+        with rooms_lock:
+            room["lastActive"] = time.time()
+            save_rooms()
+
+        broadcast_event(room_id, "audience_annotation", {
+            "drawing": drawing,
+            "user": data.get("user", "参会人员"),
+            "timestamp": time.time() * 1000
+        })
+        self.send_json({"success": True})
 
     def handle_upload(self):
         content_length = int(self.headers.get("Content-Length", 0))

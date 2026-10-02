@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 120" width="100%" height="100%">
+  <defs>
+    <style>
+      .brand-title {
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Heiti SC", "Microsoft YaHei", sans-serif;
+        font-weight: 900;
+        font-size: 52px;
+        letter-spacing: 4px;
+        fill: #111111;
+      }
+      .brand-slogan {
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Heiti SC", "Microsoft YaHei", sans-serif;
+        font-weight: 500;
+        font-size: 20px;
+        letter-spacing: 5px;
+        fill: #222222;
+      }
+      .brand-divider {
+        stroke: #111111;
+        stroke-width: 2.2;
+      }
+      .stamp-outer {
+        fill: none;
+        stroke: #E60026;
+        stroke-width: 8;
+        stroke-linejoin: round;
+        stroke-linecap: round;
+      }
+      .stamp-stroke {
+        fill: none;
+        stroke: #E60026;
+        stroke-width: 7;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+    </style>
+  </defs>
+
+  <!-- 印章图标 (基于基准方中官方标志) -->
+  <g transform="translate(15, 12)">
+    <!-- 外框圆角矩形 -->
+    <rect class="stamp-outer" x="4" y="4" width="88" height="88" rx="14" ry="14" />
+    <!-- 内部“基”字建筑结构线 -->
+    <!-- 上横梁 -->
+    <line class="stamp-stroke" x1="22" y1="23" x2="74" y2="23" />
+    <!-- 左柱与右柱 -->
+    <line class="stamp-stroke" x1="33" y1="23" x2="33" y2="48" />
+    <line class="stamp-stroke" x1="63" y1="23" x2="63" y2="48" />
+    <!-- 中间横梁 -->
+    <line class="stamp-stroke" x1="33" y1="36" x2="63" y2="36" />
+    <!-- 下部横梁 -->
+    <line class="stamp-stroke" x1="23" y1="48" x2="73" y2="48" />
+    <!-- 八字撇捺立足点 -->
+    <path class="stamp-stroke" d="M 33 48 C 31 58, 26 66, 21 68" />
+    <path class="stamp-stroke" d="M 63 48 C 65 58, 70 66, 75 68" />
+    <!-- 底部中心基柱与地梁 -->
+    <line class="stamp-stroke" x1="48" y1="48" x2="48" y2="76" />
+    <line class="stamp-stroke" x1="32" y1="76" x2="64" y2="76" />
+  </g>
+
+  <!-- 品牌名称：基准方中 -->
+  <text class="brand-title" x="140" y="78">基准方中</text>
+
+  <!-- 分割线 -->
+  <line class="brand-divider" x1="382" y1="30" x2="382" y2="92" />
+
+  <!-- 企业愿景与标语 -->
+  <text class="brand-slogan" x="408" y="52">基 于 心 · 准 于 行</text>
+  <text class="brand-slogan" x="408" y="84">创 造 价 值 · 成 就 梦 想</text>
+</svg>

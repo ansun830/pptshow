@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>基准方中 · 方案演示视觉与交互设计重构展示中心</title>
+  <style>
+    :root {
+      --font-stack: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Heiti SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+      --brand-red: #E60026;
+      --brand-red-light: rgba(230, 0, 38, 0.08);
+      --bg-gallery: #fbfbfa;
+      --border-hairline: rgba(0, 0, 0, 0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-stack);
+      background: #f4f4f2;
+      color: #111111;
+      line-height: 1.6;
+      padding: 30px 24px 100px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 顶部导航与品牌标徽 (吸顶) */
+    .top-brand-banner {
+      max-width: 1100px;
+      margin: 0 auto 30px;
+      background: #ffffff;
+      border: 1px solid var(--border-hairline);
+      border-radius: 20px;
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+    }
+    .brand-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .brand-logo-img {
+      height: 44px;
+      width: auto;
+    }
+    .brand-divider {
+      width: 1px;
+      height: 32px;
+      background: rgba(0, 0, 0, 0.1);
+    }
+    .brand-title-text {
+      display: flex;
+      flex-direction: column;
+    }
+    .brand-title-cn {
+      font-size: 15px;
+      font-weight: 800;
+      color: #111111;
+      letter-spacing: 0.5px;
+    }
+    .brand-title-en {
+      font-size: 10.5px;
+      color: #888888;
+      letter-spacing: 0.3px;
+    }
+    .nav-badge-pill {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--brand-red);
+      background: var(--brand-red-light);
+      padding: 4px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(230, 0, 38, 0.2);
+    }
+
+    .main-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 36px;
+    }
+
+    /* 章节卡片 */
+    .section-card {
+      background: #ffffff;
+      border: 1px solid var(--border-hairline);
+      border-radius: 20px;
+      padding: 32px 36px;
+      box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.06);
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      padding-bottom: 14px;
+    }
+    .section-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: #111111;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title-tag {
+      font-size: 11px;
+      font-weight: 700;
+      background: #111111;
+      color: #ffffff;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .section-desc {
+      font-size: 13.5px;
+      color: #555555;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    /* 视口 1:1 实景画框模拟 */
+    .mock-viewport-frame {
+      background: var(--bg-gallery);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 14px;
+      padding: 30px 24px;
+      position: relative;
+      min-height: 520px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.02);
+    }
+
+    /* 模拟左上角悬浮品牌徽标 */
+    .mock-top-left {
+      position: absolute;
+      top: 18px;
+      left: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 14px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-hairline);
+      border-radius: 999px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    }
+    .mock-logo-stamp {
+      width: 18px;
+      height: 18px;
+    }
+    .mock-brand-name {
+      font-size: 12.5px;
+      font-weight: 800;
+      color: #111111;
+    }
+    .mock-doc-name {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: #555555;
+    }
+
+    /* 模拟右上角胶囊 */
+    .mock-top-right {
+      position: absolute;
+      top: 18px;
+      right: 20px;
+      display: flex;
+      gap: 8px;
+    }
+    .mock-pill-btn {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--border-hairline);
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #111111;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    /* 建筑图纸展台 */
+    .mock-paper-stage {
+      width: 82%;
+      max-width: 760px;
+      aspect-ratio: 16 / 9;
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 4px;
+      box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.04);
+      display: flex;
+      flex-direction: column;
+      padding: 28px 36px;
+      position: relative;
+    }
+    .paper-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 2px solid var(--brand-red);
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+    }
+    .paper-project-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #111111;
+      letter-spacing: -0.3px;
+    }
+    .paper-meta {
+      font-size: 11px;
+      color: #888888;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .paper-body {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 20px;
+    }
+    .paper-drawing-box {
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      background: #fafafa;
+      border-radius: 4px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .drawing-grid-bg {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
+      background-size: 16px 16px;
+      pointer-events: none;
+    }
+    .drawing-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #333;
+      z-index: 2;
+    }
+    .paper-desc-box {
+      font-size: 12.5px;
+      color: #555555;
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* 悬浮智能毛玻璃 Dock (底部灵动胶囊) */
+    .mock-bottom-dock {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(28px) saturate(180%);
+      border: 1px solid var(--border-hairline);
+      border-radius: 999px;
+      box-shadow: 0 16px 40px -6px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.9) inset;
+    }
+    .mock-dock-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #111111;
+      font-size: 13px;
+    }
+    .mock-dock-page {
+      background: #fafaf9;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 999px;
+      padding: 3px 12px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .mock-dock-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: transparent;
+    }
+    .mock-dock-divider {
+      width: 1px;
+      height: 18px;
+      background: rgba(0, 0, 0, 0.1);
+    }
+    .mock-red-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--brand-red);
+    }
+
+    /* 动画放映四大架构矩阵 */
+    .animation-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+    }
+    .anim-card {
+      border: 1px solid var(--border-hairline);
+      border-radius: 12px;
+      padding: 20px;
+      background: #fafaf9;
+    }
+    .anim-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #111111;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .anim-card-desc {
+      font-size: 12.5px;
+      color: #555555;
+      line-height: 1.6;
+    }
+
+    /* 小程序化与移动端亮点 */
+    .mobile-features-list {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .mobile-card {
+      border: 1px solid var(--border-hairline);
+      border-radius: 12px;
+      padding: 18px;
+      background: #ffffff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    }
+    .mobile-card-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #111111;
+    }
+    .mobile-card-desc {
+      font-size: 12px;
+      color: #666666;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 顶部基准方中品牌标徽 -->
+  <header class="top-brand-banner">
+    <div class="brand-left">
+      <img src="/assets/jzfz-logo.svg" alt="基准方中" class="brand-logo-img">
+      <div class="brand-divider"></div>
+      <div class="brand-title-text">
+        <span class="brand-title-cn">方案演示云平台 · 架构升级报告</span>
+        <span class="brand-title-en">JZFZ PRESENTATION CLOUD SYSTEM REDESIGN</span>
+      </div>
+    </div>
+    <div class="nav-badge-pill">方案一：白石画廊 · 纯白极简 1:1 已实装</div>
+  </header>
+
+  <main class="main-container">
+
+    <!-- 模块 1：沉浸式画廊视口实景 (Stage-First Architecture) -->
+    <section class="section-card">
+      <div class="section-header">
+        <div class="section-title">
+          <span>01. 舞台优先沉浸视口与智能悬浮毛玻璃 Dock</span>
+          <span class="section-title-tag">对标 Figma Slides / Pitch</span>
+        </div>
+      </div>
+      <p class="section-desc">
+        彻底摒弃过去占用 60px 顶栏空间的传统播放器布局。整个屏幕 100% 留给建筑图纸与方案，控件收纳于底部悬浮的 Apple 风格毛玻璃灵动胶囊中。鼠标静止 2.5 秒后，Dock 会自动轻柔隐退，触碰即唤醒。
+      </p>
+
+      <div class="mock-viewport-frame">
+        <!-- 左上角悬浮品牌徽标 -->
+        <div class="mock-top-left">
+          <img src="/assets/jzfz-mark.svg" class="mock-logo-stamp" alt="基">
+          <span class="mock-brand-name">基准方中</span>
+          <span style="color:#cbd5e1;">/</span>
+          <span class="mock-doc-name">科技总部园区建筑概念方案汇报</span>
+          <span style="font-size:10px; background:rgba(230,0,38,0.1); color:#E60026; padding:1px 6px; border-radius:999px; font-weight:700;">主讲人</span>
+        </div>
+
+        <!-- 右上角悬浮辅助控制 -->
+        <div class="mock-top-right">
+          <span class="mock-pill-btn">⏱️ 12:45</span>
+          <span class="mock-pill-btn">🔗 分享</span>
+          <span class="mock-pill-btn">⛶ 全屏</span>
+        </div>
+
+        <!-- 纯白画廊图纸展台 -->
+        <div class="mock-paper-stage">
+          <div class="paper-header">
+            <div>
+              <div class="paper-project-title">03 / 规划总平面与体量推演分析</div>
+              <div style="font-size:11px; color:#E60026; font-weight:700; margin-top:2px;">MASTER PLAN & MASSING STUDY</div>
+            </div>
+            <div class="paper-meta">JZFZ ARCHITECTURAL GROUP · DESIGN STUDIO</div>
+          </div>
+          <div class="paper-body">
+            <div class="paper-drawing-box">
+              <div class="drawing-grid-bg"></div>
+              <div style="font-size:32px; margin-bottom:8px; z-index:2;">🏛️</div>
+              <div class="drawing-title">建筑总平面概念轴网与生态绿廊</div>
+            </div>
+            <div class="paper-desc-box">
+              <div><strong>设计主旨：</strong>引入多维立体城市绿轴，将研发组团与景观中庭自然交融。</div>
+              <div><strong>尺度控制：</strong>容积率 2.4，建筑限高 60 米，打造错落有致的天际线韵律。</div>
+              <div style="margin-top:auto; font-size:11px; color:#888;">图纸比例 1:500 / 方案汇报阶段稿</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 悬浮智能毛玻璃 Dock -->
+        <div class="mock-bottom-dock">
+          <button class="mock-dock-btn">◀</button>
+          <div class="mock-dock-page">03 / 48</div>
+          <button class="mock-dock-btn">▶</button>
+          <div class="mock-dock-divider"></div>
+          <div class="mock-dock-item">📑 胶片总览</div>
+          <div class="mock-dock-divider"></div>
+          <div class="mock-dock-item"><span class="mock-red-dot"></span> 激光笔</div>
+          <div class="mock-dock-item">🔦 聚光灯</div>
+          <div class="mock-dock-item">✏️ 标注</div>
+          <div class="mock-dock-item">🔄 旋转90°</div>
+          <div class="mock-dock-divider"></div>
+          <div class="mock-dock-item">💫 漫游与动效 ▾</div>
+          <div class="mock-dock-divider"></div>
+          <div class="mock-dock-item">🔄 换稿</div>
+          <div class="mock-dock-item" style="color:#dc2626;">结束</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 模块 2：动画放映四大核心架构攻坚 (攻克用户“如果要放动画怎么弄”的核心要求) -->
+    <section class="section-card">
+      <div class="section-header">
+        <div class="section-title">
+          <span>02. 建筑企业级“动画与空间漫游”放映架构</span>
+          <span class="section-title-tag">深层架构攻关</span>
+        </div>
+      </div>
+      <p class="section-desc">
+        在建筑方案汇报中，“放动画”主要有两大痛点：一是静态效果图枯燥单调；二是三维漫游视频在异地参会时播放卡顿、无法与观众同步。我们在系统中实现了四大维度的动效与动画支撑：
+      </p>
+
+      <div class="animation-grid">
+        <div class="anim-card">
+          <div class="anim-card-title">🎥 1. 建筑漫游巡镜 (Ken Burns Cinematic Roam)</div>
+          <div class="anim-card-desc">
+            针对 4K/8K 鸟瞰渲染大图与立面长卷，系统内置电影摄影机轨道缓动推拉算法。开启后自动进行缓慢平滑的推拉与镜头平移（Scale 1.0 -> 1.08），给静态图纸注入好莱坞纪录片级别的动态生命力。
+          </div>
+        </div>
+        <div class="anim-card">
+          <div class="anim-card-title">🎬 2. 漫游视频多端毫秒级同步 (Walkthrough Video Sync)</div>
+          <div class="anim-card-desc">
+            支持无缝加载 MP4/WebM 建筑漫游动画视频。主讲人点击播放、暂停或拖动时间轴，所有观众端手机与电脑通过 SSE/WebSocket 毫秒级同步至完全同一帧画面，彻底解决异地开会视频不同步的痛点。
+          </div>
+        </div>
+        <div class="anim-card">
+          <div class="anim-card-title">💫 3. 空间转场系统 (Architectural Cross-Dissolve)</div>
+          <div class="anim-card-desc">
+            配备平滑淡入（Fade）、建筑水平推移（Slide）与空间景深推拉（Depth Zoom）。当汇报图纸版心一致时，能实现无缝图层分步生长（总平 -> 结构 -> 幕墙），如同动画图层逐步叠加。
+          </div>
+        </div>
+        <div class="anim-card">
+          <div class="anim-card-title">⏱️ 4. 展厅自动巡展模式 (Auto-Play Kiosk Mode)</div>
+          <div class="anim-card-desc">
+            专为集团总部大堂展屏、投标等待室或业主展厅设计。开启后以预设秒数（8 秒）自动平滑推进轮播，无需人工翻页，展现专业大所形象。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 模块 3：小程序化与移动端体验升级 -->
+    <section class="section-card">
+      <div class="section-header">
+        <div class="section-title">
+          <span>03. 小程序化触控与移动端优化</span>
+          <span class="section-title-tag">微信 / 手机 / 平板深度适配</span>
+        </div>
+      </div>
+      <p class="section-desc">
+        参会领导或团队成员经常在微信中打开链接观看。系统全面吸收了主流小程序的交互长处：
+      </p>
+
+      <div class="mobile-features-list">
+        <div class="mobile-card">
+          <div class="mobile-card-title">👆 手势轻扫翻页 (Touch Swipe)</div>
+          <div class="mobile-card-desc">
+            手机和平板端支持自然的手势向左轻扫（下一页）与向右轻扫（上一页），带惯性阻尼防误触。
+          </div>
+        </div>
+        <div class="mobile-card">
+          <div class="mobile-card-title">📱 屏幕防休眠锁 (Wake Lock)</div>
+          <div class="mobile-card-desc">
+            放映过程中自动调用底层 Screen Wake Lock API，防止领导看汇报过程中手机屏幕超时变黑。
+          </div>
+        </div>
+        <div class="mobile-card">
+          <div class="mobile-card-title">📑 胶片画廊抽屉 (Bottom Drawer)</div>
+          <div class="mobile-card-desc">
+            摒弃生硬遮挡全屏的大弹窗，改为从屏幕底部滑出的胶片缩略图抽屉，横向滑动手感与手机相册一致。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 模块 4：异地双向提问圈点协同实景 -->
+    <section class="section-card">
+      <div class="section-header">
+        <div class="section-title">
+          <span>04. 异地双向协同圈点与领导提问画笔</span>
+          <span class="section-title-tag">异地多方协同</span>
+        </div>
+      </div>
+      <p class="section-desc">
+        异地方案汇报时，参会领导或客户可在观众端一键开启【提问圈点画笔】。在图纸上勾画圈选疑问部位，主讲人端屏幕立即毫秒级同步呈现蓝色高亮圈选与“参会领导正在圈点提问...”提示，沟通直观明确！
+      </p>
+
+      <div style="background:#fafaf9; border:1px solid rgba(0,0,0,0.08); border-radius:12px; padding:24px; position:relative; overflow:hidden;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:12px; font-weight:700; background:#2563eb; color:white; padding:2px 8px; border-radius:4px;">提问圈点模式</span>
+            <span style="font-size:12px; color:#555;">领导端笔迹（鲜明提问蓝 #2563eb）与主讲人笔迹（基准方中红 #E60026）智能区分</span>
+          </div>
+          <span style="font-size:12px; color:#059669; font-weight:600;">● 毫秒级双向同步</span>
+        </div>
+
+        <div style="background:white; border:1.5px solid rgba(0,0,0,0.1); border-radius:8px; padding:24px; min-height:220px; position:relative; box-shadow:0 8px 24px rgba(0,0,0,0.04);">
+          <div style="position:absolute; top:12px; right:16px; background:rgba(37,99,235,0.08); border:1px solid rgba(37,99,235,0.2); padding:4px 12px; border-radius:999px; font-size:11.5px; font-weight:700; color:#1d4ed8;">
+            💬 参会领导正在圈点中庭采光井...
+          </div>
+          <div style="font-size:16px; font-weight:800; color:#111; margin-bottom:8px;">二层挑空共享中庭节点大样图</div>
+          <div style="font-size:12px; color:#666; margin-bottom:20px;">SECTION DETAIL & ATRIUM DAYLIGHTING</div>
+
+          <svg width="100%" height="120" style="position:relative; z-index:2;">
+            <line x1="20" y1="80" x2="480" y2="80" stroke="#cbd5e1" stroke-width="2" />
+            <rect x="140" y="30" width="120" height="50" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4" />
+            <text x="150" y="58" font-size="11" fill="#64748b">采光天窗节点</text>
+            <path d="M 125,50 C 130,20 270,18 275,55 C 278,85 135,92 125,52" fill="none" stroke="#2563eb" stroke-width="3.5" stroke-linecap="round" />
+            <text x="285" y="55" font-size="12" font-weight="700" fill="#2563eb">← “这里排烟怎么做？”</text>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- 模块 5：方案防盗与受控保护实景 (次数时效、体面微徽标、防盗浅水印、锁定屏) -->
+    <section class="section-card">
+      <div class="section-header">
+        <div class="section-title">
+          <span>05. 方案防盗与受控阅览保护 (防客户偷方案/截图)</span>
+          <span class="section-title-tag">知识产权安全防线</span>
+        </div>
+      </div>
+      <p class="section-desc">
+        针对“提前发给客户看方案，要防止客户私下转传或偷方案”的高频痛点，系统构建了商业体面与技术防护兼备的三重保护体系：
+      </p>
+
+      <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:20px;">
+        <!-- 左侧：带基准方中浅水印与微徽标的实景展示 -->
+        <div style="background:white; border:1px solid rgba(0,0,0,0.1); border-radius:12px; padding:20px; position:relative; overflow:hidden; min-height:280px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 8px 24px rgba(0,0,0,0.04);">
+          <div class="security-watermark-layer" style="display:block; opacity:0.12;"></div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; z-index:3;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <img src="/assets/jzfz-mark.svg" style="width:18px; height:18px;">
+              <span style="font-size:12.5px; font-weight:800; color:#111;">基准方中方案展台</span>
+            </div>
+            <div class="security-pill-badge" style="display:inline-flex;">
+              <span class="sec-dot"></span>
+              <span>受控审阅版 · 限阅 10 次 (剩余 6 次) · 截止 10/05 18:00</span>
+            </div>
+          </div>
+
+          <div style="z-index:3; text-align:center; padding:30px 0;">
+            <div style="font-size:18px; font-weight:800; color:#111; margin-bottom:6px;">方案正图展示区 (倾斜浮印防盗水印)</div>
+            <div style="font-size:12px; color:#666;">浅色水印隐约覆盖全图，不影响正常审阅，但手机拍照或截屏时清晰可见企业版权，形成法律与心理威慑。</div>
+          </div>
+
+          <div style="font-size:11px; color:#888; border-top:1px solid rgba(0,0,0,0.06); padding-top:8px; z-index:3; display:flex; justify-content:space-between;">
+            <span>客户界面展示效果</span>
+            <span style="color:#d97706; font-weight:600;">已打开 4 次 / 限 10 次</span>
+          </div>
+        </div>
+
+        <!-- 右侧：超次/到期体面锁定屏模拟 -->
+        <div style="background:#fafaf9; border:1px solid rgba(0,0,0,0.1); border-radius:12px; padding:24px; text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+          <img src="/assets/jzfz-logo.svg" style="height:32px; width:auto; margin-bottom:12px;">
+          <div style="width:100%; height:1px; background:rgba(0,0,0,0.06); margin-bottom:14px;"></div>
+          <div style="font-size:24px; margin-bottom:6px;">🔒</div>
+          <div style="font-size:15px; font-weight:800; color:#111; margin-bottom:6px;">方案受控审阅保护</div>
+          <div style="font-size:11.5px; color:#666; line-height:1.5; margin-bottom:14px; max-width:85%;">
+            本方案已达最大允许阅览次数 (10/10次)。为了保护原创方案知识产权，该链接已安全锁定。
+          </div>
+          <div style="background:rgba(230,0,38,0.06); border:1px solid rgba(230,0,38,0.2); padding:3px 10px; border-radius:999px; font-size:10.5px; font-weight:700; color:#E60026; margin-bottom:14px;">
+            🛡️ 基准方中设计方案安全中心受控模式
+          </div>
+          <div style="font-size:11px; color:#888;">客户超次后双方体面讲究，促使客户主动联系主讲团队深化沟通</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+</body>
+</html>
+

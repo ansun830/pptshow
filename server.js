@@ -179,6 +179,7 @@ app.post("/api/upload", upload.single("file"), (req, res) => {
   const finalPath = path.join(UPLOAD_DIR, finalFileName);
   fs.renameSync(req.file.path, finalPath);
 
+  const { maxViews, expiresHours, watermark } = req.body;
   const newRoom = {
     id: newRoomId,
     name: roomName || path.parse(originalName).name,
@@ -192,6 +193,13 @@ app.post("/api/upload", upload.single("file"), (req, res) => {
     createdAt: Date.now(),
     lastActive: Date.now(),
     laser: { active: false, x: 0, y: 0 },
+    security: {
+      enabled: Boolean(maxViews || expiresHours || watermark),
+      maxViews: maxViews ? parseInt(maxViews, 10) : 0,
+      currentViews: 0,
+      expiresAt: expiresHours && parseFloat(expiresHours) > 0 ? Date.now() + parseFloat(expiresHours) * 3600 * 1000 : 0,
+      watermark: watermark === "true" || watermark === true,
+    },
   };
 
   rooms[newRoomId] = newRoom;
@@ -207,6 +215,7 @@ app.post("/api/upload", upload.single("file"), (req, res) => {
     fileUrl: newRoom.fileUrl,
     fileVersion: 1,
     name: newRoom.name,
+    security: newRoom.security,
   });
 });
 
@@ -248,6 +257,34 @@ app.get("/api/room/:id", (req, res) => {
   const clientKey = req.query.key || req.headers["x-presenter-key"];
   const isPresenter = Boolean(clientKey && clientKey === room.secretKey);
 
+  // 安全防盗与受控保护校验 (针对普通客户/观众)
+  if (!isPresenter && room.security && room.security.enabled) {
+    const sec = room.security;
+    // 1. 检查时效是否过期
+    if (sec.expiresAt && Date.now() > sec.expiresAt) {
+      return res.json({
+        locked: true,
+        reason: "expired",
+        expiresAt: sec.expiresAt,
+        message: "本建筑方案的受控查阅权限已到期。为保护知识产权，该链接已安全锁定，如需继续审阅请联系基准方中主讲团队获取授权。"
+      });
+    }
+    // 2. 检查最大阅览次数限制
+    if (sec.maxViews && (sec.currentViews || 0) >= sec.maxViews) {
+      return res.json({
+        locked: true,
+        reason: "max_views_reached",
+        maxViews: sec.maxViews,
+        currentViews: sec.currentViews,
+        message: `本方案已达最大允许阅览次数 (${sec.maxViews}/${sec.maxViews}次)。为保护设计方案知识产权，该链接已安全锁定。如需继续审阅，请联系基准方中设计团队。`
+      });
+    }
+
+    // 计次递增
+    sec.currentViews = (sec.currentViews || 0) + 1;
+    saveRooms();
+  }
+
   room.lastActive = Date.now();
   saveRooms();
 
@@ -261,8 +298,62 @@ app.get("/api/room/:id", (req, res) => {
     currentPage: room.currentPage || 1,
     totalPages: room.totalPages || 1,
     laser: room.laser || { active: false, x: 0, y: 0 },
+    security: room.security || { enabled: false, maxViews: 0, currentViews: 0, expiresAt: 0, watermark: false },
     isPresenter,
   });
+});
+
+// API: 主讲人更新安全受控与防盗保护配置
+app.post("/api/room/:id/security", (req, res) => {
+  const roomId = req.params.id;
+  const room = rooms[roomId];
+  if (!room) return res.status(404).json({ error: "房间不存在" });
+
+  const clientKey = req.headers["x-presenter-key"] || req.body.secretKey;
+  if (clientKey !== room.secretKey) {
+    return res.status(403).json({ error: "未授权: 密钥不正确" });
+  }
+
+  const { maxViews, expiresHours, watermark, enabled } = req.body;
+  if (!room.security) {
+    room.security = { enabled: false, maxViews: 0, currentViews: 0, expiresAt: 0, watermark: false };
+  }
+
+  if (enabled !== undefined) room.security.enabled = Boolean(enabled);
+  if (maxViews !== undefined) room.security.maxViews = parseInt(maxViews, 10);
+  if (expiresHours !== undefined) {
+    const hours = parseFloat(expiresHours);
+    room.security.expiresAt = hours > 0 ? Date.now() + hours * 3600 * 1000 : 0;
+  }
+  if (watermark !== undefined) room.security.watermark = Boolean(watermark);
+
+  room.lastActive = Date.now();
+  saveRooms();
+
+  broadcastEvent(roomId, "security_updated", room.security);
+  res.json({ success: true, security: room.security });
+});
+
+// API: 观众/参会人员或领导提问圈点画笔批注
+app.post("/api/room/:id/annotate", (req, res) => {
+  const roomId = req.params.id;
+  const room = rooms[roomId];
+  if (!room) return res.status(404).json({ error: "房间不存在" });
+
+  const { drawing, user } = req.body;
+  if (!drawing) return res.status(400).json({ error: "缺少批注数据" });
+
+  room.lastActive = Date.now();
+  saveRooms();
+
+  // 广播圈点事件给所有参会端 (包括主讲人与所有观众)
+  broadcastEvent(roomId, "audience_annotation", {
+    drawing,
+    user: user || "参会人员",
+    timestamp: Date.now(),
+  });
+
+  res.json({ success: true });
 });
 
 // API: 实时同步
@@ -276,13 +367,16 @@ app.post("/api/room/:id/sync", (req, res) => {
     return res.status(403).json({ error: "未授权" });
   }
 
-  const { page, totalPages, laser, spotlight, drawing, transition, direction } = req.body;
+  const { page, totalPages, laser, spotlight, drawing, transition, direction, rotation, video, kenBurns } = req.body;
   if (page !== undefined) room.currentPage = parseInt(page);
   if (totalPages !== undefined) room.totalPages = parseInt(totalPages);
   if (laser !== undefined) room.laser = laser;
   if (spotlight !== undefined) room.spotlight = spotlight;
   if (drawing !== undefined) room.drawing = drawing;
   if (transition !== undefined) room.transition = transition;
+  if (rotation !== undefined) room.rotation = rotation;
+  if (video !== undefined) room.video = video;
+  if (kenBurns !== undefined) room.kenBurns = kenBurns;
   room.lastActive = Date.now();
   saveRooms();
 
@@ -294,6 +388,9 @@ app.post("/api/room/:id/sync", (req, res) => {
     drawing: room.drawing,
     transition: room.transition,
     direction: direction || "next",
+    rotation: room.rotation || 0,
+    video: room.video,
+    kenBurns: room.kenBurns,
   };
   broadcastEvent(roomId, "sync", syncData);
 

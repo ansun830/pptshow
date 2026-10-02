@@ -3,39 +3,58 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SlideCast - 实时演示与即时更新协同平台</title>
+  <title>基准方中 · 企业级高保真建筑方案演示云平台</title>
   <link rel="stylesheet" href="style.css">
   <!-- PDF.js CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <!-- JSZip CDN 用于解析 PPTX 内部文件与提取幻灯片 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
-<body class="theme-dark">
+<body class="theme-gallery">
 
-  <!-- 1. 首页：上传与创建房间 -->
+  <!-- 1. 首页：上传与创建演示房间 -->
   <div id="homeView" class="view-section">
-    <header class="home-header">
-      <div class="logo">
-        <span class="logo-icon">📊</span>
-        <span class="logo-text">SlideCast</span>
+    <!-- 顶部集团官方品牌横幅 -->
+    <header class="home-brand-header">
+      <div class="brand-logo-wrap">
+        <img src="/assets/jzfz-logo.svg" alt="基准方中" class="jzfz-logo-img">
       </div>
-      <div class="header-tagline">专为即时演示设计的轻量网页协同平台（云存储自动优化保护）</div>
+      <div class="brand-divider-line"></div>
+      <div class="brand-platform-title">
+        <span class="platform-name">方案演示云平台</span>
+        <span class="platform-en">Enterprise Architectural Presentation Cloud</span>
+      </div>
     </header>
 
     <main class="home-main">
       <div class="card upload-card">
-        <h2 class="card-title">上传 PPT 或 PDF，即刻开始演示</h2>
-        <p class="card-desc">上传后即可获得固定分享网址；演示时翻页毫秒级同步，支持随时换稿热更新！</p>
+        <div class="card-header-arch">
+          <div class="arch-badge">白石画廊 · 纯白极简 1:1 汇报模式</div>
+          <h2 class="card-title">导入建筑汇报方案 (PPTX / PDF)</h2>
+          <p class="card-desc">针对建筑大图与多页方案特别优化，毫秒级跨端协同，支持电影级漫游动效与换稿热更新。</p>
+        </div>
 
         <div id="dropZone" class="drop-zone">
           <input type="file" id="fileInput" accept=".pptx, .pdf" style="display: none;">
-          <div class="drop-icon">📁</div>
-          <div class="drop-text">拖拽 PPTX / PDF 文件到此处，或 <span class="highlight-link">点击选择文件</span></div>
-          <div class="drop-hint">支持 .pptx 和 .pdf 格式，单文件上限 200MB (自动防撑爆保护)</div>
+          <div class="drop-icon-arch">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="18" x2="12" y2="12"/>
+              <polyline points="9 15 12 12 15 15"/>
+            </svg>
+          </div>
+          <div class="drop-text">拖拽建筑汇报文稿至此处，或 <span class="highlight-link">浏览本地文件</span></div>
+          <div class="drop-hint">支持 .pptx 及高清 .pdf 格式，单文件上限 200MB (自动防撑爆与瘦身优化)</div>
         </div>
 
         <div id="selectedFileInfo" class="selected-file-info" style="display: none;">
-          <span class="file-icon">📄</span>
+          <span class="file-icon-arch">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+              <polyline points="13 2 13 9 20 9"/>
+            </svg>
+          </span>
           <span id="selectedFileName" class="file-name">未选择文件</span>
           <button type="button" id="removeFileBtn" class="btn-text">重新选择</button>
         </div>
@@ -44,7 +63,7 @@
         <div id="compressOptionBox" class="compress-option-box" style="display: none;">
           <label class="compress-label">
             <input type="checkbox" id="autoCompressCheck" checked>
-            <span class="compress-label-title">⚡ 开启智能高清压缩 (极速瘦身 70%~90%)</span>
+            <span class="compress-label-title">⚡ 开启建筑高清智能压缩 (体积瘦身 70%~90%)</span>
           </label>
           <div class="compress-tip">将文稿内未压缩的数码大图优化为高清适合屏幕的尺寸，大幅加快观众加载速度，降低流量消耗。</div>
           <div id="compressionStats" class="compression-stats" style="display: none;">
@@ -55,218 +74,368 @@
           </div>
         </div>
 
+        <!-- 方案防盗与受控阅览选项 (可选配置) -->
+        <div class="security-option-box">
+          <label class="security-toggle-label">
+            <input type="checkbox" id="homeSecurityCheck">
+            <span class="security-label-title">🛡️ 开启方案防盗与受控保护 (防止客户随意翻录/私存方案)</span>
+          </label>
+          <div id="homeSecurityDetails" class="security-details-grid" style="display: none;">
+            <div class="sec-input-cell">
+              <label for="homeMaxViews">阅览次数上限</label>
+              <select id="homeMaxViews" class="select-clean-arch">
+                <option value="10" selected>限 10 次打开 (客户提前看方案推荐)</option>
+                <option value="5">限 5 次打开</option>
+                <option value="3">限 3 次打开 (机密投标)</option>
+                <option value="20">限 20 次打开</option>
+                <option value="0">不限制次数</option>
+              </select>
+            </div>
+            <div class="sec-input-cell">
+              <label for="homeExpiresHours">查阅截止时效</label>
+              <select id="homeExpiresHours" class="select-clean-arch">
+                <option value="72" selected>72 小时后截止 (3 天)</option>
+                <option value="24">24 小时后截止 (1 天)</option>
+                <option value="168">7 天后截止</option>
+                <option value="0">不设时间限制</option>
+              </select>
+            </div>
+            <div class="sec-input-cell-full">
+              <label class="checkbox-sub-label">
+                <input type="checkbox" id="homeWatermarkCheck" checked>
+                <span>同时在画框浮印基准方中专属防盗浅水印 (全图平铺防截图/拍照)</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
         <div class="form-group">
-          <label for="roomNameInput">演示主题 / 房间名称（可选）</label>
-          <input type="text" id="roomNameInput" placeholder="例如：2026 Q3 季度业务规划汇报" class="input-text">
+          <label for="roomNameInput">方案名称 / 会议主题（可选）</label>
+          <input type="text" id="roomNameInput" placeholder="例如：某科技创新总部园区建筑概念方案汇报" class="input-text">
         </div>
 
         <button id="startPresentBtn" class="btn btn-primary btn-block" disabled>
-          <span class="btn-text">创建演示并获取网址</span>
+          <span class="btn-text">创建汇报并生成放映网址</span>
           <span id="uploadSpinner" class="spinner" style="display: none;"></span>
         </button>
       </div>
 
+      <!-- 企业级特性卡片 -->
       <div class="features-grid">
         <div class="feature-item">
-          <div class="feature-icon">✨</div>
-          <div class="feature-title">影院级动效与交互</div>
-          <div class="feature-desc">支持淡入、推移、微弹等多种平滑转场，配备电影级聚光灯与荧光画笔。</div>
+          <div class="feature-icon-wrap">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M14.31 8l5.74 9.94M9.69 8h11.48M7.38 12l5.74-9.94M9.69 16L3.95 6.06M14.31 16H2.83M16.62 12l-5.74 9.94"/></svg>
+          </div>
+          <div class="feature-title">沉浸式画廊视口</div>
+          <div class="feature-desc">对标 Figma Slides / Pitch，悬浮毛玻璃 Dock 自动隐退，视口 100% 留给图纸。</div>
         </div>
         <div class="feature-item">
-          <div class="feature-icon">⚡</div>
-          <div class="feature-title">毫秒级同步翻页</div>
-          <div class="feature-desc">主讲人翻页、光标或涂鸦标注，所有观众端画面实时同步跟随。</div>
+          <div class="feature-icon-wrap">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </div>
+          <div class="feature-title">空间漫游与动效引擎</div>
+          <div class="feature-desc">支持电影级推拉漫游（Ken Burns）、视频多端毫秒级同步起播与图纸分步递进生长。</div>
         </div>
         <div class="feature-item">
-          <div class="feature-icon">🔄</div>
-          <div class="feature-title">换稿不换链</div>
-          <div class="feature-desc">重新上传新版自动删除老文件，观众端零感刷新，绝不产生双份存储占用。</div>
+          <div class="feature-icon-wrap">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="feature-title">方案防盗与受控保护</div>
+          <div class="feature-desc">支持设置打开次数与有效时间，体面提示剩余次数，叠加基准方中专属防截图水印。</div>
         </div>
         <div class="feature-item">
-          <div class="feature-icon">🛡️</div>
-          <div class="feature-title">主讲 / 观众权限隔离</div>
-          <div class="feature-desc">主讲人持有管理密钥控制演示；观众只读跟随，防止误触和翻页冲突。</div>
+          <div class="feature-icon-wrap">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+          </div>
+          <div class="feature-title">异地双向协同圈点</div>
+          <div class="feature-desc">领导提问可直接在屏幕上勾画圈点，主讲人实时看到提问位置，异地沟通零障碍。</div>
         </div>
       </div>
     </main>
+
+    <footer class="home-footer">
+      <div class="footer-corporate">基准方中建筑设计股份有限公司 · 数字化协同中心</div>
+    </footer>
   </div>
 
-  <!-- 2. 演示界面 -->
+  <!-- 2. 现代沉浸式放映主视图 (Stage-First Architecture) -->
   <div id="presentView" class="view-section" style="display: none;">
-    <!-- 顶部导航栏 -->
-    <header class="present-header" id="presentHeader">
-      <div class="present-header-left">
-        <a href="/" class="brand-link" title="返回首页">
-          <span class="logo-icon">📊</span>
-          <span class="brand-name">SlideCast</span>
-        </a>
-        <div class="room-info">
-          <span id="displayRoomName" class="room-title">演示文稿</span>
-          <span id="roleBadge" class="badge badge-host">主讲人</span>
-          <span id="connStatus" class="conn-status online" title="已连接实时服务">
-            <span class="dot"></span> 实时同步中
-          </span>
-        </div>
+
+    <!-- 顶部左上角：极简悬浮品牌徽标 (Corporate Identity Badge) -->
+    <div id="brandFloatingBadge" class="floating-badge-top-left">
+      <div class="badge-logo-mark">
+        <img src="/assets/jzfz-mark.svg" alt="基准方中" class="jzfz-mini-mark">
       </div>
-
-      <div class="present-header-center">
-        <!-- 翻页控制 -->
-        <div class="pagination-controls">
-          <button id="prevSlideBtn" class="btn-icon" title="上一页 (←)">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-          </button>
-          <div class="page-display" id="pageDisplayBtn" title="点击查看所有幻灯片 (G)">
-            <span id="currentPageNum">1</span> / <span id="totalPagesNum">1</span>
-          </div>
-          <button id="nextSlideBtn" class="btn-icon" title="下一页 (→ 或 空格)">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-          </button>
-        </div>
-
-        <!-- 转场动效选择器 (主讲人控制) -->
-        <div id="transitionSelectorWrap" class="transition-selector-wrap">
-          <select id="transitionSelect" class="select-clean" title="选择幻灯片平滑转场动画">
-            <option value="fade">💫 平滑淡入</option>
-            <option value="slide">↔️ 水平推移</option>
-            <option value="zoom">🔍 景深缩放</option>
-            <option value="none">⚡ 极速切换</option>
-          </select>
-        </div>
+      <div class="badge-text-group">
+        <span class="badge-brand-title">基准方中</span>
+        <span class="badge-sep">/</span>
+        <span id="displayRoomName" class="badge-room-title">建筑概念方案汇报</span>
       </div>
-
-      <div class="present-header-right">
-        <!-- 主讲人专属高级交互工具 -->
-        <div id="presenterTools" class="tool-group">
-          <!-- 激光笔 -->
-          <button id="laserBtn" class="btn-icon" title="激光笔 (L)">
-            <span class="laser-dot-icon"></span>
-          </button>
-          <!-- 电影级聚光灯 -->
-          <button id="spotlightBtn" class="btn-icon" title="电影级聚光灯聚焦 (S)">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
-          </button>
-          <!-- 荧光画笔标注 -->
-          <button id="penBtn" class="btn-icon" title="荧光画笔标注 (P)">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-          </button>
-          <!-- 清除标注 -->
-          <button id="clearDrawBtn" class="btn-icon" title="清除屏幕上的所有标注" style="display: none;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-          </button>
-          <!-- 幻灯片总览网格 -->
-          <button id="gridOverviewBtn" class="btn-icon" title="幻灯片卡片总览 (G)">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
-          </button>
-          <!-- 换稿 -->
-          <button id="updateFileBtn" class="btn-action" title="换稿不换链：更新 PPT">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.19"/></svg>
-            <span>更新 PPT</span>
-          </button>
-          <!-- 结束并清理 -->
-          <button id="destroyRoomBtn" class="btn-action btn-danger-action" title="结束演示并立即删除文稿以释放服务器存储空间">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            <span>结束并清理</span>
-          </button>
-        </div>
-
-        <!-- 观众端专属状态 -->
-        <div id="audienceTools" class="tool-group" style="display: none;">
-          <button id="audienceGridBtn" class="btn-icon" title="查看所有幻灯片目录 (G)">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
-          </button>
-          <button id="followToggleBtn" class="btn-action active" title="跟随主讲人模式切换">
-            <span class="follow-icon">👁️</span>
-            <span id="followStatusText">正在跟随主讲人</span>
-          </button>
-        </div>
-
-        <!-- 通用快捷工具 -->
-        <button id="shortcutsBtn" class="btn-icon" title="快捷键操作指南 (?)">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        </button>
-        <button id="shareBtn" class="btn-action btn-share" title="获取分享网址">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-          <span>分享链接</span>
-        </button>
-        <button id="fullscreenBtn" class="btn-icon" title="全屏沉浸演示 (F)">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-        </button>
+      <span id="roleBadge" class="badge badge-host">主讲人</span>
+      <div id="connStatus" class="conn-status online" title="已连接实时协同云服务">
+        <span class="dot"></span>
+        <span class="conn-text">实时协同</span>
       </div>
-    </header>
+      <!-- 观众端专属：方案受控阅览体面提示微徽标 (例如：限阅10次，剩余6次) -->
+      <div id="securityPillBadge" class="security-pill-badge" style="display: none;">
+        <span class="sec-dot"></span>
+        <span id="securityPillText">受控审阅版 · 限阅 10 次 (剩余 10 次)</span>
+      </div>
+    </div>
 
-    <!-- 幻灯片渲染主体容器 (带流光背景氛围) -->
+    <!-- 参会人员提问圈点微提示条 -->
+    <div id="attendeeAnnoNotice" class="attendee-anno-notice" style="display: none;">
+      <span class="anno-icon">💬</span>
+      <span id="attendeeAnnoText">参会人员正在圈点提问...</span>
+    </div>
+
+    <!-- 顶部右上角：辅助控制胶囊 (Timer + Share + Fullscreen) -->
+    <div id="topActionsFloating" class="floating-capsule-top-right">
+      <!-- 汇报秒表计时器 -->
+      <button id="presTimerBtn" class="btn-top-capsule" title="点击开始/暂停汇报计时 (双击重置)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span id="timerText">00:00</span>
+      </button>
+
+      <!-- 快捷键指南 -->
+      <button id="shortcutsBtn" class="btn-top-capsule btn-icon-only" title="快捷键操作指南 (?)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </button>
+
+      <!-- 分享链接 -->
+      <button id="shareBtn" class="btn-top-capsule" title="复制并分享本次演示链接">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        <span>分享</span>
+      </button>
+
+      <!-- 全屏沉浸 -->
+      <button id="fullscreenBtn" class="btn-top-capsule btn-icon-only" title="切换全屏沉浸演示 (F)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+      </button>
+    </div>
+
+    <!-- 幻灯片渲染主体视口 (纯白画廊微漫射展台) -->
     <main class="slide-viewport" id="slideViewport">
-      <!-- 舞台背光流光辉光层 -->
+      <!-- 极简画廊环境光辉 -->
       <div id="ambientGlow" class="ambient-glow"></div>
 
       <div id="slideStage" class="slide-stage">
-        <!-- Canvas 画布 (PDF 渲染) -->
+        <!-- Canvas 画布 (PDF 矢量渲染) -->
         <canvas id="pdfCanvas" style="display: none;"></canvas>
         <!-- HTML 容器 (PPTX 渲染) -->
         <div id="pptxContainer" class="pptx-container" style="display: none;"></div>
 
-        <!-- 荧光画笔标注画布 -->
+        <!-- 基准方中官方专属防盗浅水印层 (全图倾斜平铺阵列) -->
+        <div id="securityWatermarkLayer" class="security-watermark-layer" style="display: none;"></div>
+
+        <!-- 漫游视频播放图层 (支持 MP4/WebM 建筑漫游动画) -->
+        <div id="walkthroughVideoLayer" class="walkthrough-video-layer" style="display: none;">
+          <video id="slideVideoPlayer" playsinline preload="auto"></video>
+          <div class="video-hud-controls">
+            <button id="videoPlayPauseBtn" class="btn-video-hud">▶ 播放漫游</button>
+            <span id="videoTimeDisplay" class="video-time">00:00 / 00:00</span>
+            <button id="videoCloseBtn" class="btn-video-hud btn-close-video">✕ 关闭视频</button>
+          </div>
+        </div>
+
+        <!-- 荧光/建筑红/提问画笔标注画布 -->
         <canvas id="drawCanvas" class="draw-canvas"></canvas>
 
-        <!-- 聚光灯聚焦蒙版 -->
+        <!-- 电影级聚光灯聚焦蒙版 -->
         <div id="spotlightMask" class="spotlight-mask" style="display: none;"></div>
 
-        <!-- 激光笔悬浮层 -->
+        <!-- 激光笔悬浮层 (带柔和光晕轨迹) -->
         <div id="laserPointer" class="laser-pointer" style="display: none;"></div>
       </div>
 
-      <!-- 加载遮罩 -->
+      <!-- 加载等待遮罩 -->
       <div id="slideLoadingMask" class="loading-mask" style="display: flex;">
         <div class="loader-spinner"></div>
-        <div id="loadingText" class="loading-text">正在加载演示文稿...</div>
+        <div id="loadingText" class="loading-text">正在加载建筑方案图纸...</div>
       </div>
 
-      <!-- 观众临时自由翻页提示悬浮条 -->
+      <!-- 观众端脱离主讲人跟随悬浮条 -->
       <div id="audienceSyncNotice" class="sync-notice" style="display: none;">
-        <span>主讲人当前在第 <strong id="hostCurrentPageTag">1</strong> 页</span>
-        <button id="catchUpBtn" class="btn btn-sm btn-accent">回到主讲人画面</button>
+        <span>主讲人正在第 <strong id="hostCurrentPageTag">1</strong> 页汇报</span>
+        <button id="catchUpBtn" class="btn btn-sm btn-brand">回到主讲人画面</button>
       </div>
     </main>
 
-    <!-- 底部缩略图/快捷进度条 -->
-    <div class="slide-footer">
-      <div id="slideProgressBar" class="slide-progress-bar">
-        <div id="slideProgressFill" class="progress-fill"></div>
-      </div>
+    <!-- 底部极细发丝级进度条 -->
+    <div class="slide-progress-bar" id="slideProgressBar">
+      <div id="slideProgressFill" class="progress-fill"></div>
     </div>
-  </div>
 
-  <!-- 3. 模态框：幻灯片总览网格 (Grid Overview) -->
-  <div id="gridModal" class="modal-overlay" style="display: none;">
-    <div class="modal-card modal-card-lg">
-      <div class="modal-header">
-        <h3 class="modal-title">幻灯片目录总览</h3>
-        <button class="modal-close" id="closeGridModal">&times;</button>
+    <!-- 3. 悬浮智能毛玻璃 Dock (底部灵动胶囊 - Apple/Figma 风格) -->
+    <div id="floatingDock" class="floating-dock">
+      <!-- 翻页控制簇 -->
+      <div class="dock-cluster dock-nav-cluster">
+        <button id="prevSlideBtn" class="btn-dock-icon" title="上一页 (←)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+
+        <button id="pageDisplayBtn" class="dock-page-badge" title="展开胶片画廊目录 (G)">
+          <span id="currentPageNum">1</span><span class="dock-page-slash">/</span><span id="totalPagesNum">1</span>
+        </button>
+
+        <button id="nextSlideBtn" class="btn-dock-icon" title="下一页 (→ 或 空格)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
       </div>
-      <div class="modal-body">
-        <div id="gridSlidesContainer" class="grid-slides-container">
-          <!-- 动态生成的幻灯片卡片 -->
+
+      <div class="dock-divider"></div>
+
+      <!-- 胶片总览抽屉按钮 -->
+      <button id="filmstripToggleBtn" class="btn-dock-item" title="查看幻灯片胶片目录 (G)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+        <span>总览</span>
+      </button>
+
+      <!-- 主讲人专属交互工具簇 -->
+      <div id="presenterTools" class="dock-cluster">
+        <div class="dock-divider"></div>
+
+        <!-- 激光笔 -->
+        <button id="laserBtn" class="btn-dock-icon" title="激光笔 (L)">
+          <span class="laser-dot-badge"></span>
+        </button>
+
+        <!-- 电影级聚光灯 -->
+        <button id="spotlightBtn" class="btn-dock-icon" title="电影级聚光灯聚焦 (S)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+        </button>
+
+        <!-- 荧光标注笔 -->
+        <button id="penBtn" class="btn-dock-icon" title="主讲红笔批注/荧光笔 (P)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+        </button>
+
+        <!-- 画面旋转校正 90° -->
+        <button id="rotateBtn" class="btn-dock-icon" title="校正旋转画面 90° (R)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.19"/></svg>
+        </button>
+
+        <!-- 清除批注 -->
+        <button id="clearDrawBtn" class="btn-dock-icon" title="清除屏幕上的所有批注与提问圈点" style="display: none;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+        </button>
+
+        <div class="dock-divider"></div>
+
+        <!-- 高级动画与多媒体菜单展开按钮 -->
+        <div class="dock-dropdown-wrap" id="motionDropdownWrap">
+          <button id="motionMenuBtn" class="btn-dock-item" title="动画与动效模式控制">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <span>放映动效</span>
+          </button>
+          <!-- 悬浮弹出的动效控制面板 -->
+          <div id="motionMenuPopup" class="dock-menu-popup" style="display: none;">
+            <div class="popup-title">电影级放映与动画控制</div>
+
+            <div class="popup-item">
+              <label for="transitionSelect">页面切换转场</label>
+              <select id="transitionSelect" class="select-clean-arch">
+                <option value="fade">💫 平滑淡入 (Cross-Dissolve)</option>
+                <option value="slide">↔️ 建筑水平平移 (Slide)</option>
+                <option value="zoom">🔍 空间景深缩放 (Depth Zoom)</option>
+                <option value="none">⚡ 极速切换 (Instant)</option>
+              </select>
+            </div>
+
+            <div class="popup-item">
+              <button id="kenBurnsToggleBtn" class="btn-popup-action">
+                <span class="action-icon">🎥</span>
+                <span class="action-text">建筑漫游巡镜动效 (Ken Burns)</span>
+                <span id="kenBurnsStatus" class="status-tag">关闭</span>
+              </button>
+              <div class="popup-tip">对大图及鸟瞰渲染图进行缓慢平滑景深推拉，赋予静态图纸电影级生命力。</div>
+            </div>
+
+            <div class="popup-item">
+              <button id="walkthroughVideoBtn" class="btn-popup-action">
+                <span class="action-icon">🎬</span>
+                <span class="action-text">空间漫游视频播放同步</span>
+              </button>
+              <div class="popup-tip">播放三维漫游视频动画，主讲人播放/暂停/拖动进度，观众端毫秒级同步看同一帧。</div>
+            </div>
+
+            <div class="popup-item">
+              <button id="autoPlayToggleBtn" class="btn-popup-action">
+                <span class="action-icon">⏱️</span>
+                <span class="action-text">展厅自动巡展模式</span>
+                <span id="autoPlayStatus" class="status-tag">关闭</span>
+              </button>
+              <div class="popup-tip">每隔 8 秒自动平滑翻页，适合企业展厅或大堂展屏自动演示。</div>
+            </div>
+          </div>
         </div>
+
+        <div class="dock-divider"></div>
+
+        <!-- 换稿不换链 -->
+        <button id="updateFileBtn" class="btn-dock-item" title="换稿不换链：更新修改后的图纸">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.19"/></svg>
+          <span>换稿</span>
+        </button>
+
+        <!-- 结束并销毁 -->
+        <button id="destroyRoomBtn" class="btn-dock-item btn-dock-danger" title="结束演示并立即销毁文稿释放空间">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span>结束</span>
+        </button>
+      </div>
+
+      <!-- 观众端专属状态与互动圈点簇 -->
+      <div id="audienceTools" class="dock-cluster" style="display: none;">
+        <div class="dock-divider"></div>
+        <!-- 提问圈点画笔 (向主讲人圈出疑问) -->
+        <button id="audiencePenBtn" class="btn-dock-item" title="提问圈点画笔 (在屏幕上勾画提问，主讲人实时可见)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+          <span>提问圈点</span>
+        </button>
+        <!-- 清除圈点 -->
+        <button id="audienceClearDrawBtn" class="btn-dock-icon" title="清除屏幕上的圈点标注" style="display: none;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+        </button>
+        <div class="dock-divider"></div>
+        <button id="followToggleBtn" class="btn-dock-item active-follow" title="跟随主讲人模式切换">
+          <span class="follow-dot"></span>
+          <span id="followStatusText">正在跟随主讲人</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 4. 底部横向胶片画廊抽屉 (Bottom Filmstrip Drawer) 代替遮盖式弹窗 -->
+    <div id="filmstripDrawer" class="filmstrip-drawer" style="display: none;">
+      <div class="filmstrip-header">
+        <div class="filmstrip-title">
+          <span>方案幻灯片胶片画廊</span>
+          <span class="filmstrip-hint">(点击卡片直达，鼠标滚轮或左右键快速浏览)</span>
+        </div>
+        <button class="filmstrip-close" id="closeFilmstripBtn">&times;</button>
+      </div>
+      <div class="filmstrip-track" id="filmstripTrack">
+        <!-- 动态生成的胶片缩略图卡片 -->
       </div>
     </div>
   </div>
 
-  <!-- 4. 模态框：快捷键指南 -->
+  <!-- 5. 模态框：快捷键指南 -->
   <div id="shortcutsModal" class="modal-overlay" style="display: none;">
     <div class="modal-card modal-card-sm">
       <div class="modal-header">
-        <h3 class="modal-title">⌨️ 演示快捷键指南</h3>
+        <h3 class="modal-title">⌨️ 建筑汇报快捷键指南</h3>
         <button class="modal-close" id="closeShortcutsModal">&times;</button>
       </div>
       <div class="modal-body">
         <div class="shortcuts-list">
           <div class="shortcut-row">
             <span class="key-badge">→</span> / <span class="key-badge">Space</span>
-            <span class="shortcut-desc">下一页幻灯片</span>
+            <span class="shortcut-desc">下一页图纸</span>
           </div>
           <div class="shortcut-row">
             <span class="key-badge">←</span>
-            <span class="shortcut-desc">上一页幻灯片</span>
+            <span class="shortcut-desc">上一页图纸</span>
           </div>
           <div class="shortcut-row">
             <span class="key-badge">L</span>
@@ -274,15 +443,19 @@
           </div>
           <div class="shortcut-row">
             <span class="key-badge">S</span>
-            <span class="shortcut-desc">开启/关闭 聚光灯聚焦模式</span>
+            <span class="shortcut-desc">电影级聚光灯聚焦</span>
           </div>
           <div class="shortcut-row">
             <span class="key-badge">P</span>
-            <span class="shortcut-desc">开启/关闭 荧光画笔标注</span>
+            <span class="shortcut-desc">建筑荧光/红笔标注 (观众为提问圈点)</span>
+          </div>
+          <div class="shortcut-row">
+            <span class="key-badge">R</span>
+            <span class="shortcut-desc">校正旋转画面 90°</span>
           </div>
           <div class="shortcut-row">
             <span class="key-badge">G</span>
-            <span class="shortcut-desc">打开/关闭 幻灯片总览画廊</span>
+            <span class="shortcut-desc">呼出/收起胶片画廊抽屉</span>
           </div>
           <div class="shortcut-row">
             <span class="key-badge">F</span>
@@ -290,69 +463,118 @@
           </div>
           <div class="shortcut-row">
             <span class="key-badge">Esc</span>
-            <span class="shortcut-desc">退出全屏 / 关闭弹窗工具</span>
+            <span class="shortcut-desc">关闭弹层 / 退出全屏 / 取消工具</span>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 5. 模态框：分享链接 -->
+  <!-- 6. 模态框：分享链接与安全防盗保护策略 -->
   <div id="shareModal" class="modal-overlay" style="display: none;">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 class="modal-title">分享本次演示</h3>
+        <h3 class="modal-title">分享本次方案汇报</h3>
         <button class="modal-close" id="closeShareModal">&times;</button>
       </div>
       <div class="modal-body">
         <div class="share-field">
-          <label>观众分享网址（发给参会人员，只读且自动同步）：</label>
+          <label>观众分享网址（发给参会领导与客户，免登录实时同步观看）：</label>
           <div class="copy-input-group">
             <input type="text" id="audienceShareUrl" readonly class="input-text">
             <button id="copyAudienceUrlBtn" class="btn btn-primary">复制网址</button>
           </div>
-          <div class="tip-text">任何人打开此网址均可直接观看，随着主讲人翻页实时同步。</div>
+          <div class="tip-text">任何人使用微信、手机或电脑打开此网址均可实时观看，主讲人翻页毫秒级同步。</div>
         </div>
 
         <div id="hostLinkSection" class="share-field host-only-field">
-          <label>主讲人管理网址（带控制私钥，请妥善保存自己使用）：</label>
+          <label>主讲人管理私钥网址（用于控制翻页、激光笔与重新换稿，请妥善保存）：</label>
           <div class="copy-input-group">
             <input type="text" id="hostShareUrl" readonly class="input-text">
             <button id="copyHostUrlBtn" class="btn btn-secondary">复制管理链</button>
           </div>
-          <div class="tip-text text-warning">拥有该链接可控制翻页、激光笔及重新换稿，请勿发送给普通观众。</div>
+          <div class="tip-text text-warning">拥有该链接可控制演示与换稿，请勿发送给普通观众。</div>
+        </div>
+
+        <!-- 主讲人专属：客户防盗与受控保护策略配置面板 -->
+        <div id="hostSecuritySettingsBox" class="host-security-settings-box">
+          <div class="sec-box-header">
+            <div class="sec-box-title">🛡️ 客户防盗与受控保护策略配置</div>
+            <label class="switch-wrap">
+              <input type="checkbox" id="shareSecurityEnabledCheck">
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div id="shareSecurityInputs" class="sec-box-inputs" style="display: none;">
+            <div class="sec-box-grid">
+              <div class="sec-box-field">
+                <label>允许打开次数上限：</label>
+                <select id="shareMaxViewsSelect" class="select-clean-arch">
+                  <option value="10">限 10 次打开 (推荐)</option>
+                  <option value="5">限 5 次打开</option>
+                  <option value="3">限 3 次打开 (机密投标)</option>
+                  <option value="20">限 20 次打开</option>
+                  <option value="0">不限制次数</option>
+                </select>
+              </div>
+              <div class="sec-box-field">
+                <label>查阅截止时效：</label>
+                <select id="shareExpiresSelect" class="select-clean-arch">
+                  <option value="72">72 小时内 (3 天推荐)</option>
+                  <option value="24">24 小时内 (1 天)</option>
+                  <option value="168">7 天内</option>
+                  <option value="2">2 小时内</option>
+                  <option value="0">不限制时效</option>
+                </select>
+              </div>
+            </div>
+            <div class="sec-box-field-full">
+              <label class="checkbox-sub-label">
+                <input type="checkbox" id="shareWatermarkCheck" checked>
+                <span>在观众端浮印基准方中专属防盗浅水印 (全图平铺防截图/拍照)</span>
+              </label>
+            </div>
+            <button id="saveShareSecurityBtn" class="btn btn-sm btn-primary" style="margin-top: 10px; width: 100%;">
+              保存并应用受控策略
+            </button>
+            <div class="tip-text" style="margin-top: 6px;">开启后，受控阅览的剩余次数会以小巧精致的徽标体面展示给客户，避免方案被随意转传。</div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 6. 模态框：换稿不换链（重新上传 PPT） -->
+  <!-- 7. 模态框：换稿不换链（重新上传图纸） -->
   <div id="updateModal" class="modal-overlay" style="display: none;">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 class="modal-title">换稿不换链：更新 PPT / PDF</h3>
+        <h3 class="modal-title">换稿不换链：更新建筑方案文稿</h3>
         <button class="modal-close" id="closeUpdateModal">&times;</button>
       </div>
       <div class="modal-body">
         <p class="modal-desc">
-          上传修改后的最新文稿后，<strong>当前的演示网址保持不变</strong>。老旧版本会自动从服务器删除以节省空间，所有正在观看的观众页面将无缝热重载至最新内容！
+          上传修改后的最新方案后，<strong>当前的演示网址保持不变</strong>。老旧版本会自动从服务器彻底删除以节省空间，所有正在观看的观众端将无缝热重载至最新方案！
         </p>
 
         <div id="updateDropZone" class="drop-zone drop-zone-sm">
           <input type="file" id="updateFileInput" accept=".pptx, .pdf" style="display: none;">
-          <div class="drop-icon">📤</div>
+          <div class="drop-icon-arch">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+            </svg>
+          </div>
           <div class="drop-text">点击选择新版 PPTX 或 PDF 文件</div>
         </div>
 
         <div id="updateFileInfo" class="selected-file-info" style="display: none; margin-top: 12px;">
-          <span class="file-icon">📄</span>
-          <span id="updateFileName" class="file-name">新版文件</span>
+          <span class="file-icon-arch">📄</span>
+          <span id="updateFileName" class="file-name">新版文稿</span>
         </div>
 
         <div id="updateCompressBox" class="compress-option-box" style="display: none; margin-top: 10px;">
           <label class="compress-label">
             <input type="checkbox" id="updateAutoCompressCheck" checked>
-            <span class="compress-label-title">⚡ 自动启用智能瘦身压缩 (推荐)</span>
+            <span class="compress-label-title">⚡ 自动启用建筑高清瘦身压缩 (推荐)</span>
           </label>
         </div>
 
@@ -362,6 +584,62 @@
             <span id="updateSpinner" class="spinner" style="display: none;"></span>
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. 模态框：多媒体/漫游视频配置 -->
+  <div id="videoModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">🎬 空间漫游视频播放与多端同步</h3>
+        <button class="modal-close" id="closeVideoModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">
+          输入三维漫游视频 (MP4/WebM) 的网络地址或使用演示内置的漫游片段。开启后，主讲人播放、暂停或拖动进度，所有观众端手机与电脑将毫秒级同步呈现完全同一秒的画面！
+        </p>
+        <div class="form-group">
+          <label for="videoUrlInput">漫游视频直链地址 (MP4 / WebM)：</label>
+          <input type="text" id="videoUrlInput" placeholder="https://example.com/walkthrough.mp4" class="input-text">
+        </div>
+        <div class="quick-sample-videos">
+          <div class="sample-title">或快速载入演示范例：</div>
+          <button type="button" id="loadSampleVideoBtn" class="btn-text">载入建筑空间漫游范例视频 (Demo)</button>
+        </div>
+        <div class="modal-actions" style="margin-top: 20px;">
+          <button id="startSyncVideoBtn" class="btn btn-primary btn-block">
+            <span>开始同步放映漫游</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. 方案受控到期 / 超次保护锁定屏 (白石画廊极简尊荣感) -->
+  <div id="securityLockView" class="security-lock-overlay" style="display: none;">
+    <div class="lock-card">
+      <div class="lock-brand">
+        <img src="/assets/jzfz-logo.svg" alt="基准方中" class="lock-logo-img">
+      </div>
+      <div class="lock-divider"></div>
+      <div class="lock-icon-badge">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#E60026" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <h2 class="lock-title">方案受控审阅保护</h2>
+      <p id="lockMessage" class="lock-desc">
+        本建筑方案的受控查阅权限已到期或已达最大允许阅览次数。为保护原创设计方案知识产权，该链接已安全锁定。
+      </p>
+      <div class="lock-tag">🛡️ 基准方中设计方案安全中心受控模式</div>
+      <div class="lock-contact-box">
+        <div class="contact-title">如需进一步审阅方案或商务对接，请联系主讲团队：</div>
+        <div class="contact-name">基准方中建筑设计股份有限公司</div>
+      </div>
+      <div class="lock-actions">
+        <a href="/" class="btn btn-primary btn-block">返回平台首页</a>
       </div>
     </div>
   </div>

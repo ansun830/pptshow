@@ -35,6 +35,8 @@ const state = {
   // 动效与交互模式
   transitionEffect: "fade", // "fade" | "slide" | "zoom" | "none"
   pageRotation: 0, // 0 | 90 | 180 | 270 (手动旋转校正)
+  zoomMode: "page", // "page" (整页自适应，完整呈现无遮挡) | "width" (适应宽度，放大清晰阅读)
+  zoomLevel: 1.0,
   kenBurnsActive: false, // 电影级建筑巡镜漫游动效
   autoPlayActive: false, // 展厅自动巡展模式
   autoPlayTimer: null,
@@ -135,6 +137,8 @@ const dom = {
   currentPageNum: document.getElementById("currentPageNum"),
   totalPagesNum: document.getElementById("totalPagesNum"),
   filmstripToggleBtn: document.getElementById("filmstripToggleBtn"),
+  zoomModeToggleBtn: document.getElementById("zoomModeToggleBtn"),
+  zoomModeText: document.getElementById("zoomModeText"),
 
   // 工具栏交互
   presenterTools: document.getElementById("presenterTools"),
@@ -719,13 +723,31 @@ async function renderPdfPage(pageNum, direction = "next") {
     const ctx = canvas.getContext("2d");
 
     const container = dom.slideViewport;
-    const maxWidth = Math.max(320, (container.clientWidth || window.innerWidth) - 40);
-    const maxHeight = Math.max(240, (container.clientHeight || window.innerHeight) - 40);
+    const isMobile = window.innerWidth <= 768;
+    // 严格安全可视区预留：顶部预留 72px (避开徽标和功能胶囊)，底部预留 104px (避开悬浮 Dock 与进度条)
+    const topSafe = isMobile ? 54 : 76;
+    const bottomSafe = isMobile ? 80 : 108;
+    const sideSafe = isMobile ? 16 : 40;
+
+    const availWidth = Math.max(260, (container.clientWidth || window.innerWidth) - sideSafe * 2);
+    const availHeight = Math.max(200, (container.clientHeight || window.innerHeight) - (topSafe + bottomSafe));
 
     // 正确结合 PDF 页面内部旋转与用户手动校正角度
     const currentRotation = ((page.rotate || 0) + (state.pageRotation || 0)) % 360;
     const unscaledViewport = page.getViewport({ scale: 1, rotation: currentRotation });
-    const scale = Math.min(maxWidth / unscaledViewport.width, maxHeight / unscaledViewport.height, 2.5);
+
+    // 计算整页 100% 完整容纳于安全可视区的基准缩放比 (整页完整呈现，无任何裁切与遮盖)
+    const fitPageScale = Math.min(availWidth / unscaledViewport.width, availHeight / unscaledViewport.height);
+    
+    // 依据用户选择的视图模式进行自适应缩放计算
+    let scale = fitPageScale;
+    if (state.zoomMode === "width") {
+      // 适应宽度模式：宽度贴合可用宽度，支持垂直自由滚动细读文字
+      scale = Math.max(fitPageScale, availWidth / unscaledViewport.width);
+    } else {
+      // 适应整页模式：严格等比限制在可视高度与宽度之内，全图尽收眼底
+      scale = fitPageScale * (state.zoomLevel || 1.0);
+    }
 
     const viewport = page.getViewport({ scale, rotation: currentRotation });
     const outputScale = window.devicePixelRatio || 1;
@@ -1336,6 +1358,34 @@ function setupEventListeners() {
   dom.spotlightBtn.addEventListener("click", toggleSpotlight);
   dom.penBtn.addEventListener("click", togglePen);
   dom.rotateBtn.addEventListener("click", toggleRotate);
+
+  // 视图模式切换 (适应整页 / 适应宽度)
+  if (dom.zoomModeToggleBtn) {
+    dom.zoomModeToggleBtn.addEventListener("click", () => {
+      state.zoomMode = state.zoomMode === "page" ? "width" : "page";
+      if (dom.zoomModeText) {
+        dom.zoomModeText.textContent = state.zoomMode === "page" ? "整页" : "适宽";
+      }
+      showToast(state.zoomMode === "page" ? "已切换为：适应整页模式 (完整无遮挡)" : "已切换为：适应宽度模式 (放大高清读图，支持滚动)", "info");
+      if (state.fileType === "pdf") {
+        renderPdfPage(state.currentPage, "none");
+      }
+    });
+  }
+
+  // 窗口大小变动 / 手机横竖屏切换时自动重算视口比例
+  let resizeTimer = null;
+  window.addEventListener("resize", () => {
+    if (state.view !== "present") return;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      if (state.fileType === "pdf") {
+        renderPdfPage(state.currentPage, "none");
+      } else {
+        renderPptxPage(state.currentPage, "none");
+      }
+    }, 120);
+  });
   dom.clearDrawBtn.addEventListener("click", () => clearDrawCanvas(true));
 
   // 观众/领导专属提问圈点画笔

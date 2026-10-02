@@ -616,7 +616,7 @@ body.theme-gallery {
   justify-content: center;
 }
 
-/* 幻灯片渲染主体视口 */
+/* 幻灯片渲染主体视口 (安全可视区优化，防顶栏底栏遮挡图纸) */
 .slide-viewport {
   flex: 1;
   position: relative;
@@ -624,9 +624,20 @@ body.theme-gallery {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: auto;
   width: 100vw;
   height: 100vh;
+  box-sizing: border-box;
+}
+
+/* 隐藏默认滚动条但保留平滑滚动手感 */
+.slide-viewport::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.slide-viewport::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 9999px;
 }
 
 /* 安藤忠雄画廊式极简微漫射氛围背光 */
@@ -681,8 +692,11 @@ canvas#pdfCanvas {
 }
 
 .pptx-container {
-  width: 1024px;
-  height: 576px;
+  width: min(1024px, calc(100vw - 64px));
+  height: min(576px, calc((100vw - 64px) * 9 / 16), calc(100vh - 180px));
+  max-width: 100%;
+  max-height: calc(100vh - 180px);
+  aspect-ratio: 16 / 9;
   background: #ffffff;
   color: #111111;
   position: relative;
@@ -690,7 +704,9 @@ canvas#pdfCanvas {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  padding: 44px;
+  padding: 36px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
 }
 
 /* 漫游视频播放图层 */

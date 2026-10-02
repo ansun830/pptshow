@@ -26,6 +26,7 @@ if (!fs.existsSync(PUBLIC_DIR)) fs.mkdirSync(PUBLIC_DIR, { recursive: true });
 app.use(cors());
 app.use(express.json());
 app.use(express.static(PUBLIC_DIR));
+app.use("/room", express.static(PUBLIC_DIR));
 app.use("/uploads", express.static(UPLOAD_DIR));
 
 let rooms = {};

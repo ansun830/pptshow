@@ -4,11 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>基准方中 · 企业级高保真建筑方案演示云平台</title>
-  <link rel="stylesheet" href="style.css">
-  <!-- PDF.js CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <!-- JSZip CDN 用于解析 PPTX 内部文件与提取幻灯片 -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <link rel="stylesheet" href="/style.css">
+  <!-- PDF.js CDN (带双通道加速与备用源) -->
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+  <script>
+    if (!window.pdfjsLib) {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"><\/script>');
+    }
+  </script>
+  <!-- JSZip CDN (带双通道加速与备用源) -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script>
+    if (!window.JSZip) {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"><\/script>');
+    }
+  </script>
 </head>
 <body class="theme-gallery">
 
@@ -647,6 +657,6 @@
   <!-- 全局 Toast 提示容器 -->
   <div id="toastContainer" class="toast-container"></div>
 
-  <script src="app.js"></script>
+  <script src="/app.js"></script>
 </body>
 </html>

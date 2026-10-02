@@ -14,7 +14,7 @@
  */
 
 if (window.pdfjsLib) {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
 }
 
 const state = {
@@ -690,7 +690,7 @@ async function loadPresentation(url, type) {
 async function loadPdf(url) {
   const loadingTask = pdfjsLib.getDocument({
     url: `${url}?t=${Date.now()}`,
-    cMapUrl: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/",
+    cMapUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/",
     cMapPacked: true,
   });
 
